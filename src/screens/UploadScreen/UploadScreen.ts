@@ -86,17 +86,24 @@ export class UploadScreen extends HTMLElement {
     const region = this.querySelector<HTMLDivElement>('[data-files-region]');
     const count = this.querySelector<HTMLSpanElement>('[data-count]');
     const chipsHost = this.querySelector<HTMLDivElement>('[data-chips]');
-    if (!region || !count || !chipsHost) return;
+    const clearButton = this.querySelector<HTMLButtonElement>('[data-clear]');
+    const continueCta = this.querySelector<HTMLDivElement>('[data-continue-cta]');
+    if (!region || !count || !chipsHost || !clearButton || !continueCta) return;
 
-    if (this.files.length === 0) {
+    const hasFiles = this.files.length > 0;
+    const plural = this.files.length > 1 ? 's' : '';
+    count.textContent = `${this.files.length} fichier${plural} ajouté${plural}`;
+    count.hidden = !hasFiles;
+    clearButton.hidden = !hasFiles;
+    continueCta.hidden = !hasFiles;
+
+    if (!hasFiles) {
       region.hidden = true;
       chipsHost.innerHTML = '';
       return;
     }
 
     region.hidden = false;
-    const plural = this.files.length > 1 ? 's' : '';
-    count.textContent = `${this.files.length} fichier${plural} ajout\u00e9${plural}`;
 
     chipsHost.innerHTML = '';
     this.files.forEach((item) => {
