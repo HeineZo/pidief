@@ -1,0 +1,61 @@
+.pi-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-6) var(--space-12);
+  flex-shrink: 0;
+}
+
+.pi-nav__logo {
+  font-family: var(--font-serif);
+  font-size: var(--text-2xl);
+  font-style: italic;
+  letter-spacing: var(--tracking-tight);
+  color: var(--color-text);
+}
+
+.pi-nav__logo em {
+  color: var(--color-accent);
+  font-style: italic;
+}
+
+.pi-nav__links {
+  display: flex;
+  align-items: center;
+  gap: var(--space-6);
+  color: var(--color-muted);
+  font-size: var(--text-base);
+}
+
+.pi-nav__link {
+  cursor: pointer;
+  transition: color var(--transition-base);
+}
+.pi-nav__link:hover {
+  color: var(--color-text);
+}
+
+.pi-nav__lang {
+  display: inline-flex;
+  gap: var(--space-1);
+  background: var(--color-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-full);
+  padding: 4px;
+}
+
+.pi-nav__lang button {
+  border: 0;
+  background: transparent;
+  padding: 4px 12px;
+  border-radius: var(--radius-full);
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+  cursor: pointer;
+  transition: background var(--transition-base), color var(--transition-base);
+}
+
+.pi-nav__lang button[data-active='true'] {
+  background: var(--color-text);
+  color: var(--color-card);
+}

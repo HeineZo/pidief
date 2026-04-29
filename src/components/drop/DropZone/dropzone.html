@@ -1,0 +1,32 @@
+<div class="wrap" data-dragging="false">
+  <div class="ring"></div>
+  <div class="ring ring--delay"></div>
+  <div class="zone" part="zone">
+    <span class="icon">
+      <svg
+        width="26"
+        height="26"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        stroke-width="1.8"
+        stroke-linecap="round"
+        stroke-linejoin="round"
+        aria-hidden="true"
+      >
+        <path d="M12 3v12m0 0l-4-4m4 4l4-4" />
+        <path d="M3 17v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2" />
+      </svg>
+    </span>
+    <h2 class="title">Déposez vos PDFs ici</h2>
+    <p class="sub">ou choisissez une méthode ci-dessous</p>
+
+    <div class="actions">
+      <slot name="actions"></slot>
+    </div>
+
+    <p class="formats">PDF uniquement · max 100 Mo · traitement local</p>
+  </div>
+</div>
+
+<input type="file" accept=".pdf" multiple />

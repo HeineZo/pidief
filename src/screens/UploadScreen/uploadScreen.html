@@ -1,0 +1,30 @@
+<section class="pi-upload">
+  <div class="pi-upload__eyebrow">PDF toolkit · gratuit · dans le navigateur</div>
+
+  <h1 class="pi-upload__title">Vos PDFs,<br /><em>à votre façon.</em></h1>
+
+  <p class="pi-upload__sub">
+    Fusionnez, découpez, réordonnez et nettoyez vos documents —
+    sans inscription, sans upload serveur.
+  </p>
+
+  <pi-drop-zone accept=".pdf">
+    <pi-button slot="actions" variant="primary" icon="upload" data-action="browse">
+      Parcourir les fichiers
+    </pi-button>
+    <pi-button slot="actions" variant="ghost" icon="paste" data-action="paste">
+      Coller ⌘V
+    </pi-button>
+  </pi-drop-zone>
+
+  <div class="pi-upload__files" data-files-region hidden>
+    <div class="pi-upload__files-header">
+      <span class="pi-upload__files-count" data-count></span>
+      <button type="button" class="pi-upload__files-clear" data-clear>Tout retirer</button>
+    </div>
+    <div class="pi-upload__chips" data-chips></div>
+    <div class="pi-upload__cta">
+      <pi-button variant="accent" icon="arrow" data-action="continue">Choisir une action</pi-button>
+    </div>
+  </div>
+</section>

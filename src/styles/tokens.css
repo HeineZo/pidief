@@ -1,0 +1,237 @@
+/* ============================================================
+   PIDIEF DESIGN SYSTEM — Colors & Typography
+   ============================================================ */
+
+@import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap');
+
+/* ─── Base Color Tokens ──────────────────────────────────────────── */
+:root {
+  /* Backgrounds */
+  --color-bg:           #FDFAF0;   /* ivoire chaud — fond principal */
+  --color-bg-subtle:    #F7F2E0;   /* ivoire légèrement plus soutenu */
+  --color-card:         #FFFFFF;   /* surface de carte / fond input */
+
+  /* Accent — or doré */
+  --color-accent:       #C17F24;   /* primaire, CTAs, liens actifs */
+  --color-accent-hover: #A66D1A;   /* hover de l'accent */
+  --color-accent-bg:    #FEF3D6;   /* teinture douce (badges, zones actives) */
+  --color-accent-light: #FDF0C0;   /* highlight très doux */
+
+  /* Text */
+  --color-text:         #1E1408;   /* brun quasi-noir — corps principal */
+  --color-muted:        #7A5C28;   /* secondaire, placeholders */
+  --color-faint:        #B89A60;   /* tertiaire, métadonnées */
+
+  /* Borders */
+  --color-border:       #E8D8A8;   /* bordure standard */
+  --color-border-focus: #C17F24;   /* bordure focus (= accent) */
+  --color-border-strong:#C4A86A;   /* bordure marquée */
+
+  /* Feedback */
+  --color-success:      #16A34A;
+  --color-success-bg:   #DCFCE7;
+  --color-error:        #DC2626;
+  --color-error-bg:     #FEE2E2;
+  --color-warning:      #D97706;
+  --color-warning-bg:   #FEF3C7;
+
+  /* Overlays */
+  --color-overlay:      rgba(30, 20, 8, 0.45);
+  --color-scrim:        rgba(30, 20, 8, 0.08);
+}
+
+/* ─── Semantic / Component Tokens ────────────────────────────────── */
+:root {
+  /* Buttons */
+  --btn-primary-bg:     var(--color-text);
+  --btn-primary-color:  #FFFFFF;
+  --btn-primary-hover:  #3D2A12;
+  --btn-ghost-border:   var(--color-border);
+  --btn-ghost-color:    var(--color-muted);
+  --btn-accent-bg:      var(--color-accent);
+  --btn-accent-color:   #FFFFFF;
+
+  /* Navigation */
+  --nav-bg:             transparent;
+  --nav-link-color:     var(--color-muted);
+  --nav-link-active:    var(--color-text);
+
+  /* Drop zone */
+  --drop-border:        var(--color-border);
+  --drop-bg:            var(--color-card);
+  --drop-bg-active:     var(--color-accent-bg);
+  --drop-border-active: var(--color-accent);
+
+  /* File chip */
+  --chip-bg:            var(--color-accent-bg);
+  --chip-border:        var(--color-border);
+  --chip-color:         var(--color-text);
+  --chip-meta-color:    var(--color-muted);
+
+  /* Input */
+  --input-bg:           var(--color-card);
+  --input-border:       var(--color-border);
+  --input-border-focus: var(--color-accent);
+  --input-color:        var(--color-text);
+  --input-placeholder:  var(--color-faint);
+}
+
+/* ─── Spacing Scale ──────────────────────────────────────────────── */
+:root {
+  --space-1:  4px;
+  --space-2:  8px;
+  --space-3:  12px;
+  --space-4:  16px;
+  --space-5:  20px;
+  --space-6:  24px;
+  --space-8:  32px;
+  --space-10: 40px;
+  --space-12: 48px;
+  --space-14: 56px;
+  --space-16: 64px;
+}
+
+/* ─── Border Radius ──────────────────────────────────────────────── */
+:root {
+  --radius-sm:   6px;    /* badges, tags */
+  --radius-md:   10px;   /* chips, méthodes */
+  --radius-lg:   16px;   /* icônes conteneur, inputs */
+  --radius-xl:   20px;   /* cartes */
+  --radius-2xl:  24px;   /* drop zone */
+  --radius-full: 999px;  /* pills, boutons pill */
+}
+
+/* ─── Shadow Scale ───────────────────────────────────────────────── */
+:root {
+  --shadow-xs:  0 1px 3px rgba(30,20,8,0.06);
+  --shadow-sm:  0 2px 8px rgba(30,20,8,0.08);
+  --shadow-md:  0 8px 24px rgba(30,20,8,0.10);
+  --shadow-lg:  0 16px 40px rgba(30,20,8,0.12);
+  --shadow-accent: 0 24px 60px -12px rgba(193,127,36,0.28);
+}
+
+/* ─── Typography — Base Tokens ───────────────────────────────────── */
+:root {
+  --font-serif:  'Instrument Serif', 'Georgia', serif;
+  --font-sans:   'Geist', system-ui, sans-serif;
+  --font-mono:   'Geist Mono', 'Menlo', monospace;
+
+  /* Scale */
+  --text-xs:    11px;
+  --text-sm:    12px;
+  --text-base:  14px;
+  --text-md:    16px;
+  --text-lg:    17px;
+  --text-xl:    22px;
+  --text-2xl:   28px;
+  --text-3xl:   40px;
+  --text-4xl:   54px;
+  --text-5xl:   74px;
+
+  /* Line heights */
+  --leading-tight:  0.95;
+  --leading-snug:   1.1;
+  --leading-normal: 1.5;
+  --leading-relaxed: 1.55;
+
+  /* Letter spacings */
+  --tracking-tight:  -0.03em;
+  --tracking-normal: 0;
+  --tracking-wide:   0.08em;
+  --tracking-wider:  0.18em;
+}
+
+/* ─── Typography — Semantic Classes ─────────────────────────────── */
+
+/* Display — grande headline serif italique */
+.t-display {
+  font-family: var(--font-serif);
+  font-size: var(--text-5xl);
+  font-weight: 400;
+  font-style: italic;
+  line-height: var(--leading-tight);
+  letter-spacing: var(--tracking-tight);
+}
+
+/* Title — headline sans bold */
+.t-title {
+  font-family: var(--font-sans);
+  font-size: var(--text-3xl);
+  font-weight: 700;
+  line-height: var(--leading-snug);
+  letter-spacing: -0.04em;
+}
+
+/* Section heading */
+.t-heading {
+  font-family: var(--font-sans);
+  font-size: var(--text-xl);
+  font-weight: 600;
+  line-height: var(--leading-snug);
+  letter-spacing: -0.02em;
+}
+
+/* Body */
+.t-body {
+  font-family: var(--font-sans);
+  font-size: var(--text-lg);
+  font-weight: 400;
+  line-height: var(--leading-relaxed);
+}
+
+/* UI label */
+.t-label {
+  font-family: var(--font-sans);
+  font-size: var(--text-base);
+  font-weight: 500;
+  line-height: var(--leading-normal);
+}
+
+/* Caption / meta */
+.t-caption {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+}
+
+/* Eyebrow */
+.t-eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 400;
+  letter-spacing: var(--tracking-wider);
+  text-transform: uppercase;
+  color: var(--color-muted);
+}
+
+/* Code / Mono UI */
+.t-mono {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  font-weight: 500;
+}
+
+/* ─── Transitions ────────────────────────────────────────────────── */
+:root {
+  --transition-fast:   0.15s ease;
+  --transition-base:   0.25s ease;
+  --transition-slow:   0.4s ease;
+  --transition-color:  0.4s ease;
+}
+
+/* ─── Animations ─────────────────────────────────────────────────── */
+@keyframes pidief-pulse {
+  0%   { transform: scale(1); opacity: 0.5; }
+  70%  { transform: scale(1.07); opacity: 0; }
+  100% { transform: scale(1.07); opacity: 0; }
+}
+@keyframes pidief-float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-8px); }
+}
+@keyframes pidief-fade-in {
+  from { opacity: 0; transform: translateY(6px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
