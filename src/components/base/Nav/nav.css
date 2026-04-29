@@ -7,16 +7,15 @@
 }
 
 .pi-nav__logo {
-  font-family: var(--font-serif);
-  font-size: var(--text-2xl);
-  font-style: italic;
-  letter-spacing: var(--tracking-tight);
-  color: var(--color-text);
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
 }
 
-.pi-nav__logo em {
-  color: var(--color-accent);
-  font-style: italic;
+.pi-nav__logo-icon {
+  width: 48px;
+  height: 48px;
+  display: block;
 }
 
 .pi-nav__links {
