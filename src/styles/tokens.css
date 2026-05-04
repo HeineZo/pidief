@@ -1,33 +1,23 @@
-/* ============================================================
-   PIDIEF DESIGN SYSTEM — Colors & Typography
-   ============================================================ */
-
 @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=Geist:wght@300;400;500;600;700&family=Geist+Mono:wght@400;500;600&display=swap');
 
-/* ─── Base Color Tokens ──────────────────────────────────────────── */
 :root {
-  /* Backgrounds */
-  --color-bg:           #FDFAF0;   /* ivoire chaud — fond principal */
-  --color-bg-subtle:    #F7F2E0;   /* ivoire légèrement plus soutenu */
-  --color-card:         #FFFFFF;   /* surface de carte / fond input */
+  --color-bg:           #FDFAF0;
+  --color-bg-subtle:    #F7F2E0;
+  --color-card:         #FFFFFF;
 
-  /* Accent — or doré */
-  --color-accent:       #C17F24;   /* primaire, CTAs, liens actifs */
-  --color-accent-hover: #A66D1A;   /* hover de l'accent */
-  --color-accent-bg:    #FEF3D6;   /* teinture douce (badges, zones actives) */
-  --color-accent-light: #FDF0C0;   /* highlight très doux */
+  --color-accent:       #C17F24;
+  --color-accent-hover: #A66D1A;
+  --color-accent-bg:    #FEF3D6;
+  --color-accent-light: #FDF0C0;
 
-  /* Text */
-  --color-text:         #1E1408;   /* brun quasi-noir — corps principal */
-  --color-muted:        #7A5C28;   /* secondaire, placeholders */
-  --color-faint:        #B89A60;   /* tertiaire, métadonnées */
+  --color-text:         #1E1408;
+  --color-muted:        #7A5C28;
+  --color-faint:        #B89A60;
 
-  /* Borders */
-  --color-border:       #E8D8A8;   /* bordure standard */
-  --color-border-focus: #C17F24;   /* bordure focus (= accent) */
-  --color-border-strong:#C4A86A;   /* bordure marquée */
+  --color-border:       #E8D8A8;
+  --color-border-focus: #C17F24;
+  --color-border-strong:#C4A86A;
 
-  /* Feedback */
   --color-success:      #16A34A;
   --color-success-bg:   #DCFCE7;
   --color-error:        #DC2626;
@@ -35,14 +25,11 @@
   --color-warning:      #D97706;
   --color-warning-bg:   #FEF3C7;
 
-  /* Overlays */
   --color-overlay:      rgba(30, 20, 8, 0.45);
   --color-scrim:        rgba(30, 20, 8, 0.08);
 }
 
-/* ─── Semantic / Component Tokens ────────────────────────────────── */
 :root {
-  /* Buttons */
   --btn-primary-bg:     var(--color-text);
   --btn-primary-color:  #FFFFFF;
   --btn-primary-hover:  #3D2A12;
@@ -51,24 +38,20 @@
   --btn-accent-bg:      var(--color-accent);
   --btn-accent-color:   #FFFFFF;
 
-  /* Navigation */
   --nav-bg:             transparent;
   --nav-link-color:     var(--color-muted);
   --nav-link-active:    var(--color-text);
 
-  /* Drop zone */
   --drop-border:        var(--color-border);
   --drop-bg:            var(--color-card);
   --drop-bg-active:     var(--color-accent-bg);
   --drop-border-active: var(--color-accent);
 
-  /* File chip */
   --chip-bg:            var(--color-accent-bg);
   --chip-border:        var(--color-border);
   --chip-color:         var(--color-text);
   --chip-meta-color:    var(--color-muted);
 
-  /* Input */
   --input-bg:           var(--color-card);
   --input-border:       var(--color-border);
   --input-border-focus: var(--color-accent);
@@ -76,7 +59,6 @@
   --input-placeholder:  var(--color-faint);
 }
 
-/* ─── Spacing Scale ──────────────────────────────────────────────── */
 :root {
   --space-1:  4px;
   --space-2:  8px;
@@ -91,7 +73,6 @@
   --space-16: 64px;
 }
 
-/* ─── Border Radius ──────────────────────────────────────────────── */
 :root {
   --radius-sm:   6px;    /* badges, tags */
   --radius-md:   10px;   /* chips, méthodes */
@@ -101,7 +82,6 @@
   --radius-full: 999px;  /* pills, boutons pill */
 }
 
-/* ─── Shadow Scale ───────────────────────────────────────────────── */
 :root {
   --shadow-xs:  0 1px 3px rgba(30,20,8,0.06);
   --shadow-sm:  0 2px 8px rgba(30,20,8,0.08);
@@ -110,13 +90,11 @@
   --shadow-accent: 0 24px 60px -12px rgba(193,127,36,0.28);
 }
 
-/* ─── Typography — Base Tokens ───────────────────────────────────── */
 :root {
   --font-serif:  'Instrument Serif', 'Georgia', serif;
   --font-sans:   'Geist', system-ui, sans-serif;
   --font-mono:   'Geist Mono', 'Menlo', monospace;
 
-  /* Scale */
   --text-xs:    11px;
   --text-sm:    12px;
   --text-base:  14px;
@@ -128,22 +106,19 @@
   --text-4xl:   54px;
   --text-5xl:   74px;
 
-  /* Line heights */
   --leading-tight:  0.95;
   --leading-snug:   1.1;
   --leading-normal: 1.5;
   --leading-relaxed: 1.55;
 
-  /* Letter spacings */
   --tracking-tight:  -0.03em;
   --tracking-normal: 0;
   --tracking-wide:   0.08em;
   --tracking-wider:  0.18em;
 }
 
-/* ─── Typography — Semantic Classes ─────────────────────────────── */
+/* Typography */
 
-/* Display — grande headline serif italique */
 .t-display {
   font-family: var(--font-serif);
   font-size: var(--text-5xl);
@@ -153,7 +128,6 @@
   letter-spacing: var(--tracking-tight);
 }
 
-/* Title — headline sans bold */
 .t-title {
   font-family: var(--font-sans);
   font-size: var(--text-3xl);
@@ -162,7 +136,6 @@
   letter-spacing: -0.04em;
 }
 
-/* Section heading */
 .t-heading {
   font-family: var(--font-sans);
   font-size: var(--text-xl);
@@ -171,7 +144,6 @@
   letter-spacing: -0.02em;
 }
 
-/* Body */
 .t-body {
   font-family: var(--font-sans);
   font-size: var(--text-lg);
@@ -179,7 +151,6 @@
   line-height: var(--leading-relaxed);
 }
 
-/* UI label */
 .t-label {
   font-family: var(--font-sans);
   font-size: var(--text-base);
@@ -187,7 +158,6 @@
   line-height: var(--leading-normal);
 }
 
-/* Caption / meta */
 .t-caption {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
@@ -196,7 +166,6 @@
   text-transform: uppercase;
 }
 
-/* Eyebrow */
 .t-eyebrow {
   font-family: var(--font-mono);
   font-size: var(--text-xs);
@@ -206,14 +175,12 @@
   color: var(--color-muted);
 }
 
-/* Code / Mono UI */
 .t-mono {
   font-family: var(--font-mono);
   font-size: var(--text-sm);
   font-weight: 500;
 }
 
-/* ─── Transitions ────────────────────────────────────────────────── */
 :root {
   --transition-fast:   0.15s ease;
   --transition-base:   0.25s ease;
@@ -221,7 +188,6 @@
   --transition-color:  0.4s ease;
 }
 
-/* ─── Animations ─────────────────────────────────────────────────── */
 @keyframes pidief-pulse {
   0%   { transform: scale(1); opacity: 0.5; }
   70%  { transform: scale(1.07); opacity: 0; }
