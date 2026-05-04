@@ -1,5 +1,6 @@
 import type { PdfEngineApi, PdfEngineResult } from './pdfEngineApi';
 import type { PdfMergeOptions, PdfPageInfo, PdfRenderOptions, PdfRotationDelta } from './types';
+import { sendError } from '@util/Toast';
 
 type ChangeDetail = { pages: ReadonlyArray<PdfPageInfo>; pageCount: number };
 
@@ -43,7 +44,7 @@ export class PdfDocument extends EventTarget {
       scale,
     });
     if (res.type !== 'renderOk') {
-      throw new Error(`[pidief pdf] Réponse render inattendue: ${res.type}`);
+      sendError(`Réponse render inattendue: ${res.type}`);
     }
     return { bitmap: res.bitmap, width: res.width, height: res.height };
   }
@@ -52,10 +53,10 @@ export class PdfDocument extends EventTarget {
     this.ensureOpen();
     other.ensureOpen();
     if (other.docId === this.docId) {
-      throw new Error('[pidief pdf] Impossible de fusionner un document avec lui-même.');
+      sendError('Impossible de fusionner un document avec lui-même.');
     }
     if (other.engine !== this.engine) {
-      throw new Error('[pidief pdf] Les deux documents doivent provenir du même PdfEngine.');
+      sendError('Les deux documents doivent provenir du même PdfEngine.');
     }
     const at = opts?.at ?? this._pageCount;
     const res = await this.engine.post({
@@ -103,7 +104,7 @@ export class PdfDocument extends EventTarget {
     this.ensureOpen();
     const res = await this.engine.post({ type: 'export', docId: this.docId });
     if (res.type !== 'exportOk') {
-      throw new Error(`[pidief pdf] Réponse export inattendue: ${res.type}`);
+      sendError(`Réponse export inattendue: ${res.type}`);
     }
     return new Blob([res.buffer], { type: 'application/pdf' });
   }
@@ -112,23 +113,23 @@ export class PdfDocument extends EventTarget {
     if (this.closed) return;
     const res = await this.engine.post({ type: 'close', docId: this.docId });
     if (res.type !== 'closeOk') {
-      throw new Error(`[pidief pdf] Réponse close inattendue: ${res.type}`);
+      sendError(`Réponse close inattendue: ${res.type}`);
     }
     this.closed = true;
   }
 
   private ensureOpen(): void {
     if (this.closed) {
-      throw new Error('[pidief pdf] Document PDF fermé.');
+      sendError('Document PDF fermé.');
     }
   }
 
   private applyMutation(res: PdfEngineResult): void {
     if (res.type !== 'docMutationOk') {
-      throw new Error(`[pidief pdf] Réponse mutation inattendue: ${res.type}`);
+      sendError(`Réponse mutation inattendue: ${res.type}`);
     }
     if (res.docId !== this.docId) {
-      throw new Error('[pidief pdf] Réponse mutation pour un autre document.');
+      sendError('Réponse mutation pour un autre document.');
     }
     this._pageCount = res.pageCount;
     this._pages = res.pages;

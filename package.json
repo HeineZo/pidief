@@ -14,6 +14,7 @@
     "vite": "^8.0.10"
   },
   "dependencies": {
-    "mupdf": "^1.27.0"
+    "mupdf": "^1.27.0",
+    "sonner-web-component": "^0.1.4"
   }
 }

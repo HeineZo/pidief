@@ -18,11 +18,11 @@ export class PidiefApp extends HTMLElement {
       const engine = PdfEngine.shared();
       const docs = await Promise.all(files.map((file) => engine.open(file)));
       console.info(
-        '[pidief] PDFs ouverts:',
+        'PDFs ouverts:',
         docs.map((d) => ({ id: d.id, pages: d.pageCount })),
       );
     } catch (err) {
-      console.error('[pidief] Ouverture PDF impossible:', err);
+      console.error('Ouverture PDF impossible:', err);
     }
   }
 }
