@@ -13,6 +13,11 @@ const ICON_PATHS = {
     '<rect x=\"9\" y=\"9\" width=\"13\" height=\"13\" rx=\"2\"/><path d=\"M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1\"/>',
   x: '<line x1=\"18\" y1=\"6\" x2=\"6\" y2=\"18\"/><line x1=\"6\" y1=\"6\" x2=\"18\" y2=\"18\"/>',
   arrow: '<path d=\"M5 12h14M13 6l6 6-6 6\"/>',
+  'arrow-left': '<path d=\"M19 12H5M11 18l-6-6 6-6\"/>',
+  rotate:
+    '<path d=\"M21 12a9 9 0 1 1-3.5-7.1\"/><polyline points=\"21 4 21 9 16 9\"/>',
+  trash:
+    '<polyline points=\"3 6 5 6 21 6\"/><path d=\"M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2\"/><line x1=\"10\" y1=\"11\" x2=\"10\" y2=\"17\"/><line x1=\"14\" y1=\"11\" x2=\"14\" y2=\"17\"/>',
 } as const;
 
 export type IconName = keyof typeof ICON_PATHS;

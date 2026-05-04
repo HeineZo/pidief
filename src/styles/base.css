@@ -32,3 +32,17 @@ a {
   display: flex;
   flex-direction: column;
 }
+
+pidief-app {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
+
+.pidief-route-host {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+}
