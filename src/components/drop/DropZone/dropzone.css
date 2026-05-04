@@ -72,10 +72,13 @@
   font-family: var(--font-sans, 'Geist', system-ui, sans-serif);
   font-size: var(--text-base, 14px);
   color: var(--color-muted, #7a5c28);
+  text-align: center;
 }
 
 .actions {
   display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
   gap: var(--space-3, 12px);
   margin-top: 4px;
 }

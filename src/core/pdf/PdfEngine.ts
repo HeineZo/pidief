@@ -2,6 +2,7 @@ import PdfWorker from './pdfWorker.ts?worker';
 import type { PdfRequest, PdfRequestPayload, PdfResponse } from './messages';
 import type { PdfEngineApi, PdfEngineResult } from './pdfEngineApi';
 import { PdfDocument } from './PdfDocument';
+import { sendError } from '@util/Toast';
 
 type Pending = {
   resolve: (value: PdfEngineResult) => void;
@@ -26,7 +27,7 @@ export class PdfEngine implements PdfEngineApi {
     const transferable = buffer.slice(0);
     const res = await this.post({ type: 'open', buffer: transferable });
     if (res.type !== 'openOk') {
-      throw new Error(`[pidief pdf] Réponse open inattendue: ${(res as PdfEngineResult).type}`);
+      sendError("Impossible d'ouvrir le PDF");
     }
     return new PdfDocument(this, res.docId, res.pageCount, res.pages);
   }
@@ -69,14 +70,14 @@ export class PdfEngine implements PdfEngineApi {
     w.addEventListener('messageerror', (ev) => {
       this.rejectAllPending(
         new Error(
-          `[pidief pdf] Erreur de désérialisation worker: ${ev instanceof Error ? ev.message : String(ev)}`,
+          `Erreur de désérialisation worker: ${ev instanceof Error ? ev.message : String(ev)}`,
         ),
       );
     });
 
     w.addEventListener('error', (ev) => {
       this.rejectAllPending(
-        new Error(ev.message ? `[pidief pdf] Worker: ${ev.message}` : '[pidief pdf] Erreur worker inconnue'),
+        new Error(ev.message ? `Worker: ${ev.message}` : 'Erreur worker inconnue'),
       );
     });
 
