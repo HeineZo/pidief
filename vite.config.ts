@@ -10,6 +10,7 @@ export default defineConfig({
       '@screens': r('./src/screens'),
       '@styles': r('./src/styles'),
       '@util': r('./src/core/util'),
+      '@core/pdf': r('./src/core/pdf'),
     },
   },
   worker: {

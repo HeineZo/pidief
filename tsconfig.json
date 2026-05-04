@@ -18,7 +18,8 @@
       "@components/*": ["./src/components/*"],
       "@screens/*": ["./src/screens/*"],
       "@styles/*": ["./src/styles/*"],
-      "@util/*": ["./src/core/util/*"]
+      "@util/*": ["./src/core/util/*"],
+      "@core/pdf/*": ["./src/core/pdf/*"]
     },
 
     /* Linting */
