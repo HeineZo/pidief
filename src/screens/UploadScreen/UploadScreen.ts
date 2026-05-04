@@ -4,7 +4,9 @@ import '@components/drop/DropZone/PiDropZone';
 import type { PiDropZone } from '@components/drop/DropZone/PiDropZone';
 import template from './uploadScreen.html?raw';
 import './uploadScreen.css';
+import { sendError } from '@util/Toast';
 import { formatBytes } from '@util/formatBytes';
+import { getPasteShortcutLabel } from '@util/GetPasteShortcutLabel';
 
 interface UploadFile {
   id: string;
@@ -17,14 +19,24 @@ const newId = (): string =>
 export class UploadScreen extends HTMLElement {
   private files: UploadFile[] = [];
 
+  private onWindowPaste = (event: ClipboardEvent): void => {
+    void this.handlePasteEvent(event);
+  };
+
   connectedCallback(): void {
     this.render();
+    window.addEventListener('paste', this.onWindowPaste);
+  }
+
+  disconnectedCallback(): void {
+    window.removeEventListener('paste', this.onWindowPaste);
   }
 
   private render(): void {
     this.innerHTML = template;
 
     this.bindEvents();
+    this.refreshPasteButtonLabel();
     this.refreshFilesRegion();
   }
 
@@ -45,7 +57,7 @@ export class UploadScreen extends HTMLElement {
     this.querySelector<HTMLElement>('[data-action=\"paste\"]')?.addEventListener(
       'click',
       () => {
-        // Stub V1 : la lecture clipboard PDF arrivera avec l'int\u00e9gration mupdf.
+        void this.pasteFromClipboard();
       },
     );
 
@@ -71,10 +83,87 @@ export class UploadScreen extends HTMLElement {
     );
   }
 
+  private refreshPasteButtonLabel(): void {
+    const pasteHost = this.querySelector<HTMLElement>('[data-action=\"paste\"]');
+    if (!pasteHost) return;
+    const labelSpan = pasteHost.querySelector<HTMLSpanElement>('button.pi-button span');
+    if (labelSpan) {
+      labelSpan.textContent = `Coller ${getPasteShortcutLabel()}`;
+    }
+  }
+
   private addFiles(incoming: File[]): void {
-    const items = incoming.map((file) => ({ id: newId(), file }));
+    const items = incoming
+      .filter((file) => file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'))
+      .map((file) => ({ id: newId(), file }));
     this.files = [...this.files, ...items];
     this.refreshFilesRegion();
+  }
+
+  private getPdfFilesFromDataTransfer(data: DataTransfer | null): File[] {
+    if (!data) return [];
+
+    const fromFiles = Array.from(data.files).filter(
+      (file) => file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'),
+    );
+    if (fromFiles.length > 0) return fromFiles;
+
+    const items = Array.from(data.items);
+    const fromItems = items
+      .filter((item) => item.kind === 'file')
+      .map((item) => item.getAsFile())
+      .filter((file): file is File => Boolean(file))
+      .filter((file) => file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'));
+
+    return fromItems;
+  }
+
+  private async handlePasteEvent(event: ClipboardEvent): Promise<void> {
+    const pdfFiles = this.getPdfFilesFromDataTransfer(event.clipboardData);
+    if (pdfFiles.length === 0) return;
+
+    event.preventDefault();
+    this.addFiles(pdfFiles);
+  }
+
+  private async pasteFromClipboard(): Promise<void> {
+    const pasteShortcut = getPasteShortcutLabel();
+
+    if (!('clipboard' in navigator)) {
+      sendError(
+        `Votre navigateur ne permet pas de lire le presse-papier ici. Utilisez plutôt ${pasteShortcut}`,
+      );
+    }
+
+    if (!('read' in navigator.clipboard)) {
+      sendError(
+        `Cliquez dans la page puis utilisez ${pasteShortcut} pour coller un PDF`,
+      );
+    }
+
+    let items: ClipboardItem[];
+    try {
+      items = await navigator.clipboard.read();
+    } catch {
+      sendError(
+        `Impossible d'accéder au presse-papier. Cliquez dans la page puis utilisez ${pasteShortcut} (acceptez la permission si le navigateur la demande)`,
+      );
+    }
+
+    const pdfFiles: File[] = [];
+    for (const item of items) {
+      if (!item.types.includes('application/pdf')) continue;
+
+      const blob = await item.getType('application/pdf');
+      const ts = new Date().toISOString().replaceAll(':', '-');
+      pdfFiles.push(new File([blob], `clipboard-${ts}.pdf`, { type: 'application/pdf' }));
+    }
+
+    if (pdfFiles.length === 0) {
+      sendError('Aucun PDF dans le presse-papier');
+    }
+
+    this.addFiles(pdfFiles);
   }
 
   private removeFile(id: string): void {
