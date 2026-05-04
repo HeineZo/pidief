@@ -8,7 +8,6 @@ export interface PageTint {
   pattern: PatternKind;
 }
 
-/** Palette cyclique alignée sur la V3 (archives/Pidief Pages.html) + variantes. */
 const PALETTE: readonly PageTint[] = [
   {
     color: '#C17F24',

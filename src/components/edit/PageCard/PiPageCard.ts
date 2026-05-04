@@ -11,13 +11,6 @@ const ACTIONS: ReadonlySet<PageCardAction> = new Set(['rotate', 'delete']);
 const isAction = (value: string | null): value is PageCardAction =>
   value !== null && (ACTIONS as Set<string>).has(value);
 
-/**
- * Vignette d'une page PDF (rendu MuPDF sur canvas).
- *
- * Attributs : `page-index`, `source-name`, `display-order`, `data-page-id`
- * Propriétés : `doc`, `tint`
- * Événements : `page-action` (CustomEvent<{ action: 'rotate' | 'delete' }>)
- */
 export class PiPageCard extends HTMLElement {
   static get observedAttributes(): string[] {
     return ['page-index', 'source-name', 'display-order'];
@@ -49,7 +42,6 @@ export class PiPageCard extends HTMLElement {
     return this._tint;
   }
 
-  /** Force a re-render of the canvas (e.g. after a rotation). */
   invalidate(): void {
     if (this.isConnected) this.scheduleDraw();
   }
