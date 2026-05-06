@@ -20,7 +20,13 @@
 .wrap[data-dragging='true'] .ring {
   animation: pulse-ring 2.2s ease-out infinite;
 }
+.wrap:hover .ring {
+  animation: pulse-ring 2.2s ease-out infinite;
+}
 .wrap[data-dragging='true'] .ring--delay {
+  animation-delay: 0.7s;
+}
+.wrap:hover .ring--delay {
   animation-delay: 0.7s;
 }
 
@@ -29,6 +35,7 @@
   background: var(--drop-bg, #ffffff);
   border-radius: var(--radius-2xl, 24px);
   padding: 48px 40px;
+  cursor: pointer;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -37,6 +44,10 @@
 }
 
 .wrap[data-dragging='true'] .zone {
+  border: 2px dashed var(--drop-border-active, #c17f24);
+  background: var(--drop-bg-active, #fef3d6);
+}
+.wrap:hover .zone {
   border: 2px dashed var(--drop-border-active, #c17f24);
   background: var(--drop-bg-active, #fef3d6);
 }
@@ -54,6 +65,10 @@
 }
 
 .wrap[data-dragging='true'] .icon {
+  background: var(--color-accent, #c17f24);
+  color: #fff;
+}
+.wrap:hover .icon {
   background: var(--color-accent, #c17f24);
   color: #fff;
 }

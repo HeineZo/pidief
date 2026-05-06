@@ -16,6 +16,7 @@ const TEMPLATE = `<style>${css}</style>${html}`;
 
 export class PiDropZone extends HTMLElement {
   private wrap: HTMLDivElement | null = null;
+  private actions: HTMLDivElement | null = null;
   private input: HTMLInputElement | null = null;
 
   constructor() {
@@ -29,6 +30,7 @@ export class PiDropZone extends HTMLElement {
     if (!root) return;
 
     this.wrap = root.querySelector<HTMLDivElement>('.wrap');
+    this.actions = root.querySelector<HTMLDivElement>('.actions');
     this.input = root.querySelector<HTMLInputElement>('input[type=\"file\"]');
 
     if (!this.wrap || !this.input) return;
@@ -39,6 +41,7 @@ export class PiDropZone extends HTMLElement {
     this.wrap.addEventListener('dragover', this.onDragOver);
     this.wrap.addEventListener('dragleave', this.onDragLeave);
     this.wrap.addEventListener('drop', this.onDrop);
+    this.wrap.addEventListener('click', this.onWrapClick);
     this.input.addEventListener('change', this.onInputChange);
   }
 
@@ -46,6 +49,7 @@ export class PiDropZone extends HTMLElement {
     this.wrap?.removeEventListener('dragover', this.onDragOver);
     this.wrap?.removeEventListener('dragleave', this.onDragLeave);
     this.wrap?.removeEventListener('drop', this.onDrop);
+    this.wrap?.removeEventListener('click', this.onWrapClick);
     this.input?.removeEventListener('change', this.onInputChange);
   }
 
@@ -56,6 +60,34 @@ export class PiDropZone extends HTMLElement {
   openFileDialog(): void {
     this.input?.click();
   }
+
+  private onWrapClick = (event: MouseEvent): void => {
+    if (event.defaultPrevented) return;
+    if (event.button !== 0) return;
+
+    const path = event.composedPath();
+    if (this.actions && path.includes(this.actions)) return;
+
+    const clickedInteractive = path.some((node) => {
+      if (!(node instanceof HTMLElement)) return false;
+      const tag = node.tagName.toLowerCase();
+      return (
+        tag === 'button' ||
+        tag === 'a' ||
+        tag === 'input' ||
+        tag === 'select' ||
+        tag === 'textarea' ||
+        tag === 'label' ||
+        tag === 'summary' ||
+        tag === 'details' ||
+        tag === 'pi-button' ||
+        node.getAttribute('role') === 'button'
+      );
+    });
+    if (clickedInteractive) return;
+
+    this.openFileDialog();
+  };
 
   private onDragOver = (event: DragEvent): void => {
     event.preventDefault();
