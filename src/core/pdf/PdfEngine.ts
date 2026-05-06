@@ -2,7 +2,7 @@ import PdfWorker from './pdfWorker.ts?worker';
 import type { PdfRequest, PdfRequestPayload, PdfResponse } from './messages';
 import type { PdfEngineApi, PdfEngineResult } from './pdfEngineApi';
 import { PdfDocument } from './PdfDocument';
-import { sendError } from '@util/Toast';
+import { failWith, sendError } from '@util/Toast';
 
 type Pending = {
   resolve: (value: PdfEngineResult) => void;
@@ -27,7 +27,7 @@ export class PdfEngine implements PdfEngineApi {
     const transferable = buffer.slice(0);
     const res = await this.post({ type: 'open', buffer: transferable });
     if (res.type !== 'openOk') {
-      sendError("Impossible d'ouvrir le PDF");
+      failWith("Impossible d'ouvrir le PDF");
     }
     return new PdfDocument(this, res.docId, res.pageCount, res.pages);
   }
@@ -62,6 +62,7 @@ export class PdfEngine implements PdfEngineApi {
       this.pending.delete(id);
       if (data.type === 'error') {
         entry.reject(new Error(data.message));
+        sendError(data.message);
         return;
       }
       entry.resolve(data as PdfEngineResult);

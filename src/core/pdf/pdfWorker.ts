@@ -3,7 +3,6 @@
 import * as mupdf from 'mupdf';
 import type { PdfPageInfo } from './types';
 import type { PdfRequest, PdfResponse } from './messages';
-import { sendError } from '@util/Toast';
 
 const docs = new Map<string, mupdf.PDFDocument>();
 
@@ -86,7 +85,7 @@ function pixmapToImageData(pix: mupdf.Pixmap): ImageData {
       }
     }
   } else {
-    sendError(`Le format pixmap n'est pas supporté (${n} composantes)`);
+    throw new Error(`Le format pixmap n'est pas supporté (${n} composantes)`);
   }
 
   return new ImageData(out, w, h);
@@ -94,7 +93,7 @@ function pixmapToImageData(pix: mupdf.Pixmap): ImageData {
 
 function requireDoc(docId: string): mupdf.PDFDocument {
   const pdf = docs.get(docId);
-  if (!pdf) sendError("Document inconnu");
+  if (!pdf) throw new Error('Document inconnu');
   return pdf;
 }
 
@@ -134,7 +133,7 @@ async function handle(req: PdfRequest): Promise<void> {
         const pdf = requireDoc(req.docId);
         const n = pdf.countPages();
         if (req.pageIndex < 0 || req.pageIndex >= n) {
-          sendError(`L'index ${req.pageIndex} est invalide`);
+          throw new Error(`L'index ${req.pageIndex} est invalide`);
         }
         const page = pdf.loadPage(req.pageIndex) as mupdf.PDFPage;
         try {
@@ -167,7 +166,7 @@ async function handle(req: PdfRequest): Promise<void> {
 
       case 'merge': {
         if (req.destDocId === req.srcDocId) {
-          sendError('Impossible de fusionner un document avec lui-même.');
+          throw new Error('Impossible de fusionner un document avec lui-même.');
         }
         const dest = requireDoc(req.destDocId);
         const src = requireDoc(req.srcDocId);
@@ -201,7 +200,7 @@ async function handle(req: PdfRequest): Promise<void> {
         const pdf = requireDoc(req.docId);
         const n = pdf.countPages();
         if (req.from < 0 || req.from >= n || req.to < 0 || req.to >= n) {
-          sendError(`Les indices ${req.from} et ${req.to} sont invalides`);
+          throw new Error(`Les indices ${req.from} et ${req.to} sont invalides`);
         }
         const order = Array.from({ length: n }, (_, i) => i);
         const [moved] = order.splice(req.from, 1);
@@ -222,7 +221,7 @@ async function handle(req: PdfRequest): Promise<void> {
         const pdf = requireDoc(req.docId);
         const n = pdf.countPages();
         if (req.pageIndex < 0 || req.pageIndex >= n) {
-          sendError(`L'index ${req.pageIndex} est invalide`);
+          throw new Error(`L'index ${req.pageIndex} est invalide`);
         }
         const page = pdf.loadPage(req.pageIndex) as mupdf.PDFPage;
         try {
@@ -256,7 +255,7 @@ async function handle(req: PdfRequest): Promise<void> {
         const pdf = requireDoc(req.docId);
         const n = pdf.countPages();
         if (req.pageIndex < 0 || req.pageIndex >= n) {
-          sendError(`L'index ${req.pageIndex} est invalide`);
+          throw new Error(`L'index ${req.pageIndex} est invalide`);
         }
         pdf.deletePage(req.pageIndex);
         const pages = collectSnapshot(pdf);
@@ -287,7 +286,7 @@ async function handle(req: PdfRequest): Promise<void> {
       default: {
         const _exhaustive: never = req;
         void _exhaustive;
-        sendError('La requête est inconnue');
+        throw new Error('La requête est inconnue');
       }
     }
   } catch (e) {

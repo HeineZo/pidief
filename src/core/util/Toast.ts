@@ -1,10 +1,18 @@
 import { toast } from 'sonner-web-component';
 
 /**
- * Affiche un toast d'erreur
+ * Affiche un toast d'erreur (n'interrompt pas le flow).
  */
-export function sendError(message: string): never {
+export function sendError(message: string): void {
   toast.error(message);
+}
+
+/**
+ * Affiche un toast d'erreur puis interrompt le flow en lançant une Error.
+ * À utiliser quand le flow ne peut pas continuer (narrowing TS, rejet de promise).
+ */
+export function failWith(message: string): never {
+  sendError(message);
   throw new Error(message);
 }
 

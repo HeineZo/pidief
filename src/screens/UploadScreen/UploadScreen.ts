@@ -133,12 +133,14 @@ export class UploadScreen extends HTMLElement {
       sendError(
         `Votre navigateur ne permet pas de lire le presse-papier ici. Utilisez plutôt ${pasteShortcut}`,
       );
+      return;
     }
 
     if (!('read' in navigator.clipboard)) {
       sendError(
         `Cliquez dans la page puis utilisez ${pasteShortcut} pour coller un PDF`,
       );
+      return;
     }
 
     let items: ClipboardItem[];
@@ -148,6 +150,7 @@ export class UploadScreen extends HTMLElement {
       sendError(
         `Impossible d'accéder au presse-papier. Cliquez dans la page puis utilisez ${pasteShortcut} (acceptez la permission si le navigateur la demande)`,
       );
+      return;
     }
 
     const pdfFiles: File[] = [];
@@ -161,6 +164,7 @@ export class UploadScreen extends HTMLElement {
 
     if (pdfFiles.length === 0) {
       sendError('Aucun PDF dans le presse-papier');
+      return;
     }
 
     this.addFiles(pdfFiles);

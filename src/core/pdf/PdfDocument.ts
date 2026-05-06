@@ -1,6 +1,6 @@
 import type { PdfEngineApi, PdfEngineResult } from './pdfEngineApi';
 import type { PdfMergeOptions, PdfPageInfo, PdfRenderOptions, PdfRotationDelta } from './types';
-import { sendError } from '@util/Toast';
+import { failWith } from '@util/Toast';
 
 type ChangeDetail = { pages: ReadonlyArray<PdfPageInfo>; pageCount: number };
 
@@ -44,7 +44,7 @@ export class PdfDocument extends EventTarget {
       scale,
     });
     if (res.type !== 'renderOk') {
-      sendError(`Réponse render inattendue: ${res.type}`);
+      failWith(`Réponse render inattendue: ${res.type}`);
     }
     return { bitmap: res.bitmap, width: res.width, height: res.height };
   }
@@ -53,10 +53,10 @@ export class PdfDocument extends EventTarget {
     this.ensureOpen();
     other.ensureOpen();
     if (other.docId === this.docId) {
-      sendError('Impossible de fusionner un document avec lui-même.');
+      failWith('Impossible de fusionner un document avec lui-même.');
     }
     if (other.engine !== this.engine) {
-      sendError('Les deux documents doivent provenir du même PdfEngine.');
+      failWith('Les deux documents doivent provenir du même PdfEngine.');
     }
     const at = opts?.at ?? this._pageCount;
     const res = await this.engine.post({
@@ -104,7 +104,7 @@ export class PdfDocument extends EventTarget {
     this.ensureOpen();
     const res = await this.engine.post({ type: 'export', docId: this.docId });
     if (res.type !== 'exportOk') {
-      sendError(`Réponse export inattendue: ${res.type}`);
+      failWith(`Réponse export inattendue: ${res.type}`);
     }
     return new Blob([res.buffer], { type: 'application/pdf' });
   }
@@ -113,23 +113,23 @@ export class PdfDocument extends EventTarget {
     if (this.closed) return;
     const res = await this.engine.post({ type: 'close', docId: this.docId });
     if (res.type !== 'closeOk') {
-      sendError(`Réponse close inattendue: ${res.type}`);
+      failWith(`Réponse close inattendue: ${res.type}`);
     }
     this.closed = true;
   }
 
   private ensureOpen(): void {
     if (this.closed) {
-      sendError('Document PDF fermé.');
+      failWith('Document PDF fermé.');
     }
   }
 
   private applyMutation(res: PdfEngineResult): void {
     if (res.type !== 'docMutationOk') {
-      sendError(`Réponse mutation inattendue: ${res.type}`);
+      failWith(`Réponse mutation inattendue: ${res.type}`);
     }
     if (res.docId !== this.docId) {
-      sendError('Réponse mutation pour un autre document.');
+      failWith('Réponse mutation pour un autre document.');
     }
     this._pageCount = res.pageCount;
     this._pages = res.pages;
