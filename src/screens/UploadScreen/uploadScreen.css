@@ -111,3 +111,19 @@
 .pi-upload__cta[hidden] {
   display: none;
 }
+
+pi-button[data-action='paste'] .pi-button.is-kbd-hover:not(:disabled) {
+  animation: pi-upload-kbd-hover 220ms ease-out;
+}
+
+@keyframes pi-upload-kbd-hover {
+  0% {
+    transform: translateY(0) scale(1);
+  }
+  55% {
+    transform: translateY(-1px) scale(1.01);
+  }
+  100% {
+    transform: translateY(0) scale(1);
+  }
+}
