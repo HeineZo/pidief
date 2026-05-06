@@ -9,10 +9,10 @@
     <h1 class="pi-edit__title">Éditez vos PDF ici</h1>
     <div class="pi-edit__legend-row">
       <div class="pi-edit__legend" data-legend></div>
-      <div class="pi-edit__grid-controls">
-        <label class="pi-edit__grid-label" for="grid-columns-range">Colonnes</label>
+      <div class="pi-edit__grid-controls" role="group" aria-labelledby="grid-columns-label">
+        <label id="grid-columns-label" class="pi-edit__grid-label" for="grid-columns-range">Colonnes</label>
         <div class="pi-edit__grid-slider-wrap">
-          <pi-icon name="grid-small" size="18" stroke="1.4"></pi-icon>
+          <pi-icon name="grid-small" size="18" stroke="1.5" aria-hidden="true"></pi-icon>
           <input
             id="grid-columns-range"
             class="pi-edit__grid-slider"
@@ -21,10 +21,18 @@
             max="10"
             step="1"
             value="6"
+            aria-describedby="grid-columns-value"
             data-grid-columns-slider
           />
-          <pi-icon name="grid-large" size="18" stroke="1.4"></pi-icon>
-          <output class="pi-edit__grid-value" for="grid-columns-range" data-grid-columns-value>6</output>
+          <pi-icon name="grid-large" size="18" stroke="1.5" aria-hidden="true"></pi-icon>
+          <output
+            id="grid-columns-value"
+            class="pi-edit__grid-value"
+            for="grid-columns-range"
+            aria-live="polite"
+            data-grid-columns-value
+            >6 colonnes</output
+          >
         </div>
       </div>
     </div>

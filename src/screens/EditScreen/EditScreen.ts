@@ -175,8 +175,10 @@ export class EditScreen extends HTMLElement {
     if (slider) {
       slider.value = String(clamped);
       slider.style.setProperty('--pi-edit-grid-progress', `${progress}%`);
+      slider.setAttribute('aria-valuenow', String(clamped));
+      slider.setAttribute('aria-valuetext', `${clamped} colonnes`);
     }
-    if (valueEl) valueEl.textContent = String(clamped);
+    if (valueEl) valueEl.textContent = `${clamped} colonnes`;
     grid?.style.setProperty('--pi-edit-grid-columns', String(clamped));
   }
 
