@@ -6,13 +6,36 @@
       <pi-button variant="ghost" icon="upload" data-action="add-pdf">Ajouter un PDF</pi-button>
       <pi-button variant="primary" icon="arrow" data-action="continue">Continuer</pi-button>
     </div>
-    <p class="t-eyebrow pi-edit__eyebrow">/ vue teintée</p>
-    <h1 class="pi-edit__title">Vos pages, <em>par teinte.</em></h1>
-    <p class="pi-edit__sub">
-      Chaque fichier source colore légèrement le fond de ses pages — l'origine se lit d'un coup d'œil.
-      Glissez pour réorganiser, ou utilisez les actions au survol.
-    </p>
-    <div class="pi-edit__legend" data-legend></div>
+    <h1 class="pi-edit__title">Éditez vos PDF ici</h1>
+    <div class="pi-edit__legend-row">
+      <div class="pi-edit__legend" data-legend></div>
+      <div class="pi-edit__grid-controls" role="group" aria-labelledby="grid-columns-label">
+        <label id="grid-columns-label" class="pi-edit__grid-label" for="grid-columns-range">Colonnes</label>
+        <div class="pi-edit__grid-slider-wrap">
+          <pi-icon name="grid-small" size="18" stroke="1.5" aria-hidden="true"></pi-icon>
+          <input
+            id="grid-columns-range"
+            class="pi-edit__grid-slider"
+            type="range"
+            min="3"
+            max="10"
+            step="1"
+            value="6"
+            aria-describedby="grid-columns-value"
+            data-grid-columns-slider
+          />
+          <pi-icon name="grid-large" size="18" stroke="1.5" aria-hidden="true"></pi-icon>
+          <output
+            id="grid-columns-value"
+            class="pi-edit__grid-value"
+            for="grid-columns-range"
+            aria-live="polite"
+            data-grid-columns-value
+            >6 colonnes</output
+          >
+        </div>
+      </div>
+    </div>
   </header>
   <div class="pi-edit__scroll">
     <div class="pi-edit__grid" data-grid></div>
