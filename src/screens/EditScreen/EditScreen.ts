@@ -202,6 +202,7 @@ export class EditScreen extends HTMLElement {
           this.attributions.push(sourceIndex);
           this.pageIds.push(crypto.randomUUID());
         }
+        this.reconcile();
       } catch (err) {
         console.error('[pidief] Ajout impossible:', err);
       } finally {
