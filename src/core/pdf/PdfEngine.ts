@@ -3,6 +3,7 @@ import type { PdfRequest, PdfRequestPayload, PdfResponse } from './messages';
 import type { PdfEngineApi, PdfEngineResult } from './pdfEngineApi';
 import { PdfDocument } from './PdfDocument';
 import { sendError } from '@util/Toast';
+import { toast } from 'sonner-web-component';
 
 type Pending = {
   resolve: (value: PdfEngineResult) => void;
@@ -61,6 +62,7 @@ export class PdfEngine implements PdfEngineApi {
       if (!entry) return;
       this.pending.delete(id);
       if (data.type === 'error') {
+        toast.error(data.message);
         entry.reject(new Error(data.message));
         return;
       }
