@@ -18,18 +18,33 @@ const newId = (): string =>
 
 export class UploadScreen extends HTMLElement {
   private files: UploadFile[] = [];
+  private pasteHoverTimeoutId: number | null = null;
 
   private onWindowPaste = (event: ClipboardEvent): void => {
     void this.handlePasteEvent(event);
   };
 
+  private onWindowKeyDown = (event: KeyboardEvent): void => {
+    const key = event.key.toLowerCase();
+    if (key !== 'v') return;
+    if (!(event.ctrlKey || event.metaKey)) return;
+
+    this.flashPasteButtonHover();
+  };
+
   connectedCallback(): void {
     this.render();
     window.addEventListener('paste', this.onWindowPaste);
+    window.addEventListener('keydown', this.onWindowKeyDown);
   }
 
   disconnectedCallback(): void {
     window.removeEventListener('paste', this.onWindowPaste);
+    window.removeEventListener('keydown', this.onWindowKeyDown);
+    if (this.pasteHoverTimeoutId !== null) {
+      window.clearTimeout(this.pasteHoverTimeoutId);
+      this.pasteHoverTimeoutId = null;
+    }
   }
 
   private render(): void {
@@ -97,6 +112,25 @@ export class UploadScreen extends HTMLElement {
     }
   }
 
+  private flashPasteButtonHover(): void {
+    const pasteHost = this.querySelector<HTMLElement>('[data-action="paste"]');
+    if (!pasteHost) return;
+
+    const button = pasteHost.querySelector<HTMLButtonElement>('button.pi-button');
+    if (!button) return;
+
+    if (this.pasteHoverTimeoutId !== null) {
+      window.clearTimeout(this.pasteHoverTimeoutId);
+      this.pasteHoverTimeoutId = null;
+    }
+
+    button.classList.add('is-kbd-hover');
+    this.pasteHoverTimeoutId = window.setTimeout(() => {
+      button.classList.remove('is-kbd-hover');
+      this.pasteHoverTimeoutId = null;
+    }, 220);
+  }
+
   private addFiles(incoming: File[]): void {
     const items = incoming
       .filter((file) => file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'))
@@ -123,9 +157,25 @@ export class UploadScreen extends HTMLElement {
     return fromItems;
   }
 
+  private shouldIgnorePasteTarget(target: EventTarget | null): boolean {
+    if (!target) return false;
+    if (!(target instanceof HTMLElement)) return false;
+
+    const tag = target.tagName.toLowerCase();
+    if (tag === 'input' || tag === 'textarea') return true;
+    if (target.isContentEditable) return true;
+
+    return false;
+  }
+
   private async handlePasteEvent(event: ClipboardEvent): Promise<void> {
+    if (this.shouldIgnorePasteTarget(event.target)) return;
+
     const pdfFiles = this.getPdfFilesFromDataTransfer(event.clipboardData);
-    if (pdfFiles.length === 0) return;
+    if (pdfFiles.length === 0) {
+      sendError('Aucun PDF dans le presse-papier');
+      return;
+    }
 
     event.preventDefault();
     this.addFiles(pdfFiles);

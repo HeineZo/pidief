@@ -26,7 +26,7 @@ Tech principale: **Web Components natifs** + **WebAssembly** (via `mupdf` dans u
 
 ### Problématiques (qualité)
 
-- **Accessibilité**: clavier, sémantique, focus visible, messages accessibles, contrastes.
+- **Accessibilité-first**: on conçoit et dev avec l’a11y comme défaut (clavier, sémantique, focus visible, messages accessibles, contrastes) — pas un “polish” en fin de projet.
 - **Éco-conception**: au moins **une métrique DDRS** / indicateur simple + actions concrètes.
 - **Analytics**: objectifs, minimisation, transparence, risques/limites, alternatives.
 - **Performance**: chargement + fluidité raisonnables, mesures outillées.
