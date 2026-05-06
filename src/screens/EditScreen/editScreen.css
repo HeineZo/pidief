@@ -58,8 +58,108 @@
   flex-wrap: wrap;
   align-items: center;
   gap: var(--space-5);
-  padding: var(--space-2) 0 var(--space-2);
+  padding: var(--space-2) 0;
   font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+.pi-edit__legend-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+
+.pi-edit__grid-controls {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin-left: auto;
+}
+
+.pi-edit__grid-label {
+  font-size: var(--text-sm);
+  color: var(--color-muted);
+}
+
+.pi-edit__grid-slider-wrap {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.pi-edit__grid-slider-wrap pi-icon {
+  color: var(--color-faint);
+}
+
+.pi-edit__grid-slider-wrap pi-icon[name='grid-small'] svg {
+  width: 16px;
+  height: 16px;
+}
+
+.pi-edit__grid-slider-wrap pi-icon[name='grid-large'] svg {
+  width: 20px;
+  height: 20px;
+}
+
+.pi-edit__grid-slider {
+  width: 140px;
+  accent-color: var(--color-accent);
+  --pi-edit-grid-progress: 42.857%;
+  appearance: none;
+  -webkit-appearance: none;
+  background: transparent;
+}
+
+.pi-edit__grid-slider::-webkit-slider-runnable-track {
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: linear-gradient(
+    to right,
+    var(--color-accent) 0,
+    var(--color-accent) var(--pi-edit-grid-progress),
+    #fff var(--pi-edit-grid-progress),
+    #fff 100%
+  );
+}
+
+.pi-edit__grid-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 14px;
+  height: 14px;
+  margin-top: -4px;
+  border-radius: 50%;
+  border: 2px solid var(--color-accent);
+  background: #fff;
+}
+
+.pi-edit__grid-slider::-moz-range-track {
+  height: 6px;
+  border: none;
+  border-radius: var(--radius-full);
+  background: #fff;
+}
+
+.pi-edit__grid-slider::-moz-range-progress {
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-accent);
+}
+
+.pi-edit__grid-slider::-moz-range-thumb {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  border: 2px solid var(--color-accent);
+  background: #fff;
+}
+
+.pi-edit__grid-value {
+  min-width: 1.5ch;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
   color: var(--color-text);
 }
 
@@ -114,7 +214,7 @@
 
 .pi-edit__grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(110px, 1fr));
+  grid-template-columns: repeat(var(--pi-edit-grid-columns, 6), minmax(0, 1fr));
   gap: var(--space-2);
   align-items: start;
 }

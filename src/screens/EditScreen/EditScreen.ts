@@ -1,4 +1,5 @@
 import '@components/base/Button/PiButton';
+import '@components/base/Icon/PiIcon';
 import '@components/edit/PageCard/PiPageCard';
 import { PdfEngine } from '@core/pdf/PdfEngine';
 import type { PdfDocument } from '@core/pdf/PdfDocument';
@@ -24,9 +25,14 @@ const escapeHtml = (s: string): string =>
     .replace(/>/g, '&gt;')
     .replace(/"/g, '&quot;');
 
+const MIN_GRID_COLUMNS = 3;
+const MAX_GRID_COLUMNS = 10;
+const DEFAULT_GRID_COLUMNS = 6;
+
 export class EditScreen extends HTMLElement {
   private _docs: EditScreenSource[] | null = null;
   private bound = false;
+  private gridColumns = DEFAULT_GRID_COLUMNS;
 
   private workingDoc: PdfDocument | null = null;
   private sources: SourceMeta[] = [];
@@ -147,6 +153,31 @@ export class EditScreen extends HTMLElement {
 
     const grid = this.querySelector<HTMLElement>('[data-grid]');
     grid?.addEventListener('pointerdown', this.onGridPointerDown);
+
+    const slider = this.querySelector<HTMLInputElement>('[data-grid-columns-slider]');
+    const onSliderInput = (): void => {
+      const next = Number.parseInt(slider?.value ?? '', 10);
+      this.applyGridColumns(Number.isFinite(next) ? next : DEFAULT_GRID_COLUMNS);
+    };
+    slider?.addEventListener('input', onSliderInput);
+    this.applyGridColumns(this.gridColumns);
+  }
+
+  private applyGridColumns(value: number): void {
+    const clamped = Math.min(MAX_GRID_COLUMNS, Math.max(MIN_GRID_COLUMNS, value));
+    const progress = ((clamped - MIN_GRID_COLUMNS) / (MAX_GRID_COLUMNS - MIN_GRID_COLUMNS)) * 100;
+    this.gridColumns = clamped;
+
+    const slider = this.querySelector<HTMLInputElement>('[data-grid-columns-slider]');
+    const valueEl = this.querySelector<HTMLOutputElement>('[data-grid-columns-value]');
+    const grid = this.querySelector<HTMLElement>('[data-grid]');
+
+    if (slider) {
+      slider.value = String(clamped);
+      slider.style.setProperty('--pi-edit-grid-progress', `${progress}%`);
+    }
+    if (valueEl) valueEl.textContent = String(clamped);
+    grid?.style.setProperty('--pi-edit-grid-columns', String(clamped));
   }
 
   // --- Actions par page ---

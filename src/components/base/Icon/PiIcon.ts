@@ -18,6 +18,10 @@ const ICON_PATHS = {
     '<path d=\"M21 12a9 9 0 1 1-3.5-7.1\"/><polyline points=\"21 4 21 9 16 9\"/>',
   trash:
     '<polyline points=\"3 6 5 6 21 6\"/><path d=\"M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2\"/><line x1=\"10\" y1=\"11\" x2=\"10\" y2=\"17\"/><line x1=\"14\" y1=\"11\" x2=\"14\" y2=\"17\"/>',
+  'grid-small':
+    '<rect x=\"5\" y=\"5\" width=\"6\" height=\"6\" rx=\"1\"/><rect x=\"13\" y=\"5\" width=\"6\" height=\"6\" rx=\"1\"/><rect x=\"5\" y=\"13\" width=\"6\" height=\"6\" rx=\"1\"/><rect x=\"13\" y=\"13\" width=\"6\" height=\"6\" rx=\"1\"/>',
+  'grid-large':
+    '<rect x=\"3\" y=\"3\" width=\"8\" height=\"8\" rx=\"1\"/><rect x=\"13\" y=\"3\" width=\"8\" height=\"8\" rx=\"1\"/><rect x=\"3\" y=\"13\" width=\"8\" height=\"8\" rx=\"1\"/><rect x=\"13\" y=\"13\" width=\"8\" height=\"8\" rx=\"1\"/>',
 } as const;
 
 export type IconName = keyof typeof ICON_PATHS;
