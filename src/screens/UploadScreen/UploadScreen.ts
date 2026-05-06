@@ -69,17 +69,22 @@ export class UploadScreen extends HTMLElement {
       },
     );
 
-    this.querySelector<HTMLElement>('[data-action=\"continue\"]')?.addEventListener(
-      'click',
-      () => {
-        this.dispatchEvent(
-          new CustomEvent<{ files: File[] }>('files-ready', {
-            detail: { files: this.files.map((f) => f.file) },
-            bubbles: true,
-            composed: true,
-          }),
-        );
-      },
+    this.addEventListener('click', (event) => {
+      const target = event.target as HTMLElement | null;
+      if (!target?.closest('[data-action=\"continue\"]')) return;
+      this.emitFilesReady();
+    });
+  }
+
+  private emitFilesReady(): void {
+    const selectedFiles = this.files.map((item) => item.file);
+    if (selectedFiles.length === 0) return;
+    this.dispatchEvent(
+      new CustomEvent<{ files: File[] }>('files-ready', {
+        detail: { files: selectedFiles },
+        bubbles: true,
+        composed: true,
+      }),
     );
   }
 
