@@ -139,6 +139,129 @@ pi-page-card[data-dragging='true'] .pi-page-card__actions {
   background: transparent;
 }
 
+.pi-pattern--diamond {
+  width: 10px;
+  height: 10px;
+  background: var(--pi-page-label-color, var(--color-text));
+  transform: rotate(45deg);
+  border-radius: 1px;
+}
+
+.pi-pattern--triangle {
+  width: 0;
+  height: 0;
+  border-left: 6px solid transparent;
+  border-right: 6px solid transparent;
+  border-bottom: 10px solid var(--pi-page-label-color, var(--color-text));
+}
+
+.pi-pattern--ring {
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--pi-page-label-color, var(--color-text));
+  border-radius: 50%;
+  background: transparent;
+}
+
+.pi-pattern--square {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background: var(--pi-page-label-color, var(--color-text));
+}
+
+.pi-pattern--pill {
+  width: 14px;
+  height: 6px;
+  border-radius: var(--radius-full);
+  background: var(--pi-page-label-color, var(--color-text));
+}
+
+.pi-pattern--slash {
+  width: 12px;
+  height: 2px;
+  border-radius: 1px;
+  background: var(--pi-page-label-color, var(--color-text));
+  transform: rotate(-28deg);
+}
+
+.pi-pattern--plus {
+  width: 10px;
+  height: 10px;
+  border-radius: 2px;
+  background:
+    linear-gradient(
+      to right,
+      transparent 40%,
+      var(--pi-page-label-color, var(--color-text)) 40%,
+      var(--pi-page-label-color, var(--color-text)) 60%,
+      transparent 60%
+    ),
+    linear-gradient(
+      to bottom,
+      transparent 40%,
+      var(--pi-page-label-color, var(--color-text)) 40%,
+      var(--pi-page-label-color, var(--color-text)) 60%,
+      transparent 60%
+    );
+}
+
+.pi-pattern--doubleLines {
+  width: 14px;
+  height: 8px;
+  border-radius: 1px;
+  background:
+    linear-gradient(
+      to bottom,
+      var(--pi-page-label-color, var(--color-text)) 0 2px,
+      transparent 2px 4px,
+      var(--pi-page-label-color, var(--color-text)) 4px 6px,
+      transparent 6px 100%
+    );
+}
+
+.pi-pattern--hollowDiamond {
+  width: 10px;
+  height: 10px;
+  border: 2px solid var(--pi-page-label-color, var(--color-text));
+  border-radius: 1px;
+  background: transparent;
+  transform: rotate(45deg);
+}
+
+.pi-pattern--checker {
+  width: 12px;
+  height: 12px;
+  border-radius: 2px;
+  background:
+    conic-gradient(
+      var(--pi-page-label-color, var(--color-text)) 0 25%,
+      transparent 25% 50%,
+      var(--pi-page-label-color, var(--color-text)) 50% 75%,
+      transparent 75% 100%
+    );
+  background-size: 6px 6px;
+}
+
+.pi-pattern--star {
+  width: 12px;
+  height: 12px;
+  background: var(--pi-page-label-color, var(--color-text));
+  clip-path: polygon(50% 0%, 62% 35%, 100% 38%, 70% 60%, 80% 100%, 50% 75%, 20% 100%, 30% 60%, 0% 38%, 38% 35%);
+}
+
+.pi-pattern--bars {
+  width: 14px;
+  height: 8px;
+  border-radius: 1px;
+  background:
+    repeating-linear-gradient(
+      to right,
+      var(--pi-page-label-color, var(--color-text)) 0 2px,
+      transparent 2px 4px
+    );
+}
+
 .pi-page-card__label {
   font-family: var(--font-mono);
   font-size: 11px;

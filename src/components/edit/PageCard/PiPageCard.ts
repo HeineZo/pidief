@@ -13,7 +13,7 @@ const isAction = (value: string | null): value is PageCardAction =>
 
 export class PiPageCard extends HTMLElement {
   static get observedAttributes(): string[] {
-    return ['page-index', 'source-name', 'display-order'];
+    return ['page-index', 'source-name', 'display-order', 'original-page'];
   }
 
   private _doc: PdfDocument | null = null;
@@ -98,10 +98,26 @@ export class PiPageCard extends HTMLElement {
   private updateFooter(): void {
     const name = this.getAttribute('source-name') ?? '';
     const label = this.querySelector<HTMLElement>('[data-label]');
+    const footer = this.querySelector<HTMLElement>('.pi-page-card__footer');
     const patternEl = this.querySelector<HTMLElement>('[data-pattern]');
     const num = this.querySelector<HTMLElement>('[data-num]');
+
+    const originalRaw = this.getAttribute('original-page');
+    const originalNum = originalRaw !== null ? Number.parseInt(originalRaw, 10) : NaN;
+    const pageLabel =
+      Number.isFinite(originalNum) && originalNum > 0 ? `Page ${originalNum}` : '';
     if (label) {
-      label.textContent = name.replace(/\.pdf$/i, '');
+      label.textContent = pageLabel;
+    }
+    if (footer) {
+      const cleanName = name.replace(/\.pdf$/i, '');
+      if (pageLabel && cleanName) {
+        footer.setAttribute('aria-label', `${pageLabel} de ${cleanName}`);
+        footer.setAttribute('title', `${pageLabel} — ${cleanName}`);
+      } else {
+        footer.removeAttribute('aria-label');
+        footer.removeAttribute('title');
+      }
     }
     if (patternEl && this._tint) {
       patternEl.className = `pi-pattern pi-pattern--${this._tint.pattern}`;

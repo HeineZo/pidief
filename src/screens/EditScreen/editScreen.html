@@ -1,4 +1,5 @@
 <section class="pi-edit">
+  <div class="pi-edit__top-sentinel" data-scroll-sentinel aria-hidden="true"></div>
   <header class="pi-edit__head">
     <div class="pi-edit__toolbar">
       <pi-button variant="ghost" icon="arrow-left" data-action="back">Retour</pi-button>
@@ -6,7 +7,6 @@
       <pi-button variant="ghost" icon="upload" data-action="add-pdf">Ajouter un PDF</pi-button>
       <pi-button variant="primary" icon="arrow" data-action="continue">Continuer</pi-button>
     </div>
-    <h1 class="pi-edit__title">Éditez vos PDF ici</h1>
     <div class="pi-edit__legend-row">
       <div class="pi-edit__legend" data-legend></div>
       <div class="pi-edit__grid-controls" role="group" aria-labelledby="grid-columns-label">
@@ -37,11 +37,17 @@
       </div>
     </div>
   </header>
-  <div class="pi-edit__scroll">
-    <div class="pi-edit__grid" data-grid></div>
-    <div class="pi-edit__empty" data-empty hidden>
-      <p>Aucune page restante. Ajoutez un PDF pour continuer.</p>
-    </div>
+  <div class="pi-edit__hero">
+    <p class="t-eyebrow pi-edit__eyebrow">/ vue teintée</p>
+    <h1 class="pi-edit__title">Vos pages, <em>par teinte.</em></h1>
+    <p class="pi-edit__sub">
+      Chaque fichier source colore légèrement le fond de ses pages — l'origine se lit d'un coup d'œil.
+      Glissez pour réorganiser, ou utilisez les actions au survol.
+    </p>
+  </div>
+  <div class="pi-edit__grid" data-grid></div>
+  <div class="pi-edit__empty" data-empty hidden>
+    <p>Aucune page restante. Ajoutez un PDF pour continuer.</p>
   </div>
   <input type="file" accept="application/pdf" multiple hidden data-add-input />
 </section>

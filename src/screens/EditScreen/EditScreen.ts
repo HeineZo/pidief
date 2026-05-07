@@ -37,12 +37,15 @@ export class EditScreen extends HTMLElement {
   private workingDoc: PdfDocument | null = null;
   private sources: SourceMeta[] = [];
   private attributions: number[] = [];
+  private originalPageNumbers: number[] = [];
   private pageIds: string[] = [];
 
   private readonly cards = new Map<string, PiPageCard>();
   private readonly onWorkingChange = (): void => {
     this.reconcile();
   };
+
+  private scrollObserver: IntersectionObserver | null = null;
 
   private dragSession: {
     cardEl: PiPageCard;
@@ -75,6 +78,8 @@ export class EditScreen extends HTMLElement {
 
   disconnectedCallback(): void {
     this.workingDoc?.removeEventListener('change', this.onWorkingChange);
+    this.scrollObserver?.disconnect();
+    this.scrollObserver = null;
     const doc = this.workingDoc;
     this.workingDoc = null;
     this._docs = null;
@@ -94,6 +99,7 @@ export class EditScreen extends HTMLElement {
     this.workingDoc = first.doc;
     this.sources = [{ fileName: first.fileName, tint: tintForSourceIndex(0) }];
     this.attributions = Array.from({ length: first.doc.pageCount }, () => 0);
+    this.originalPageNumbers = Array.from({ length: first.doc.pageCount }, (_, i) => i + 1);
 
     for (let i = 0; i < rest.length; i++) {
       const slot = rest[i]!;
@@ -106,7 +112,10 @@ export class EditScreen extends HTMLElement {
           fileName: slot.fileName,
           tint: tintForSourceIndex(sourceIndex),
         });
-        for (let k = 0; k < added; k++) this.attributions.push(sourceIndex);
+        for (let k = 0; k < added; k++) {
+          this.attributions.push(sourceIndex);
+          this.originalPageNumbers.push(k + 1);
+        }
       } catch (err) {
         console.error('[pidief] Fusion impossible:', err);
       } finally {
@@ -153,14 +162,17 @@ export class EditScreen extends HTMLElement {
 
     const grid = this.querySelector<HTMLElement>('[data-grid]');
     grid?.addEventListener('pointerdown', this.onGridPointerDown);
-
     const slider = this.querySelector<HTMLInputElement>('[data-grid-columns-slider]');
     const onSliderInput = (): void => {
       const next = Number.parseInt(slider?.value ?? '', 10);
       this.applyGridColumns(Number.isFinite(next) ? next : DEFAULT_GRID_COLUMNS);
     };
     slider?.addEventListener('input', onSliderInput);
+    grid?.addEventListener('pointerover', this.onGridPointerOver);
+    grid?.addEventListener('pointerleave', this.onGridPointerLeave);
+
     this.applyGridColumns(this.gridColumns);
+    this.setupScrollObserver();
   }
 
   private applyGridColumns(value: number): void {
@@ -180,6 +192,25 @@ export class EditScreen extends HTMLElement {
     }
     if (valueEl) valueEl.textContent = `${clamped} colonnes`;
     grid?.style.setProperty('--pi-edit-grid-columns', String(clamped));
+  }
+
+  private setupScrollObserver(): void {
+    if (this.scrollObserver) return;
+    const scrollEl = this.querySelector<HTMLElement>('.pi-edit');
+    const sentinel = this.querySelector<HTMLElement>('[data-scroll-sentinel]');
+    if (!scrollEl || !sentinel) return;
+
+    const root = scrollEl;
+    root.dataset.scrolled = 'false';
+    this.scrollObserver = new IntersectionObserver(
+      (entries) => {
+        const entry = entries[0];
+        if (!entry) return;
+        root.dataset.scrolled = entry.isIntersecting ? 'false' : 'true';
+      },
+      { root, threshold: 0 },
+    );
+    this.scrollObserver.observe(sentinel);
   }
 
   // --- Actions par page ---
@@ -203,6 +234,7 @@ export class EditScreen extends HTMLElement {
 
     if (action === 'delete') {
       this.attributions.splice(idx, 1);
+      this.originalPageNumbers.splice(idx, 1);
       this.pageIds.splice(idx, 1);
       try {
         await doc.deletePage(idx);
@@ -233,6 +265,7 @@ export class EditScreen extends HTMLElement {
         });
         for (let i = 0; i < count; i++) {
           this.attributions.push(sourceIndex);
+          this.originalPageNumbers.push(i + 1);
           this.pageIds.push(crypto.randomUUID());
         }
         this.reconcile();
@@ -294,8 +327,11 @@ export class EditScreen extends HTMLElement {
       }
       const sourceIndex = this.attributions[idx] ?? 0;
       const meta = this.sources[sourceIndex];
+      const original = this.originalPageNumbers[idx] ?? idx + 1;
       card.setAttribute('page-index', String(idx));
       card.setAttribute('display-order', String(idx + 1));
+      card.setAttribute('original-page', String(original));
+      card.dataset.sourceIndex = String(sourceIndex);
       if (meta) {
         card.setAttribute('source-name', meta.fileName);
         card.tint = meta.tint;
@@ -328,16 +364,69 @@ export class EditScreen extends HTMLElement {
       .map((meta, i) => {
         const count = counts.get(i) ?? 0;
         if (count === 0) return '';
-        const t = meta.tint;
-        const marker =
-          t.pattern === 'cross'
-            ? `<span class="pi-edit__legend-marker pi-edit__legend-marker--cross" style="border-color:${escapeHtml(t.color)}"></span>`
-            : t.pattern === 'lines'
-              ? `<span class="pi-edit__legend-marker pi-edit__legend-marker--lines" style="background:${escapeHtml(t.color)}"></span>`
-              : `<span class="pi-edit__legend-marker pi-edit__legend-marker--dots" style="background:${escapeHtml(t.color)}"></span>`;
-        return `<span class="pi-edit__legend-item">${marker}<span class="pi-edit__legend-name">${escapeHtml(meta.fileName)}</span><span class="pi-edit__legend-count">${count} p.</span></span>`;
+        const marker = this.renderLegendMarker(meta.tint);
+        return `<span class="pi-edit__legend-item" data-source-index="${i}">${marker}<span class="pi-edit__legend-name">${escapeHtml(meta.fileName)}</span><span class="pi-edit__legend-count">${count} p.</span></span>`;
       })
       .join('');
+  }
+
+  private renderLegendMarker(tint: PageTint): string {
+    const color = escapeHtml(tint.color);
+    const base = 'pi-edit__legend-marker';
+    switch (tint.pattern) {
+      case 'cross':
+      case 'ring':
+      case 'hollowDiamond':
+        return `<span class="${base} ${base}--${tint.pattern}" style="border-color:${color}"></span>`;
+      case 'triangle':
+        return `<span class="${base} ${base}--triangle" style="border-bottom-color:${color}"></span>`;
+      case 'plus':
+        return `<span class="${base} ${base}--plus" style="background:linear-gradient(to right,transparent 40%,${color} 40%,${color} 60%,transparent 60%),linear-gradient(to bottom,transparent 40%,${color} 40%,${color} 60%,transparent 60%)"></span>`;
+      case 'doubleLines':
+        return `<span class="${base} ${base}--doubleLines" style="background:linear-gradient(to bottom,${color} 0 2px,transparent 2px 4px,${color} 4px 6px,transparent 6px 100%)"></span>`;
+      case 'checker':
+        return `<span class="${base} ${base}--checker" style="background:conic-gradient(${color} 0 25%,transparent 25% 50%,${color} 50% 75%,transparent 75% 100%);background-size:6px 6px"></span>`;
+      case 'star':
+        return `<span class="${base} ${base}--star" style="background:${color};clip-path:polygon(50% 0%,62% 35%,100% 38%,70% 60%,80% 100%,50% 75%,20% 100%,30% 60%,0% 38%,38% 35%)"></span>`;
+      case 'bars':
+        return `<span class="${base} ${base}--bars" style="background:repeating-linear-gradient(to right,${color} 0 2px,transparent 2px 4px)"></span>`;
+      default:
+        return `<span class="${base} ${base}--${tint.pattern}" style="background:${color}"></span>`;
+    }
+  }
+
+  // --- Hover dim : items de légende des autres sources ---
+
+  private readonly onGridPointerOver = (event: PointerEvent): void => {
+    if (this.dragSession) return;
+    const target = event.target as HTMLElement | null;
+    const card = target?.closest<PiPageCard>('pi-page-card') ?? null;
+    if (!card) return;
+    const active = card.dataset.sourceIndex;
+    if (active === undefined) return;
+    this.applyLegendFade(active);
+  };
+
+  private readonly onGridPointerLeave = (): void => {
+    this.clearFaded();
+  };
+
+  private applyLegendFade(activeSourceIndex: string): void {
+    const items = this.querySelectorAll<HTMLElement>('.pi-edit__legend-item');
+    items.forEach((item) => {
+      if (item.dataset.sourceIndex !== activeSourceIndex) {
+        item.dataset.faded = 'true';
+      } else {
+        delete item.dataset.faded;
+      }
+    });
+  }
+
+  private clearFaded(): void {
+    const items = this.querySelectorAll<HTMLElement>('.pi-edit__legend-item');
+    items.forEach((item) => {
+      delete item.dataset.faded;
+    });
   }
 
   // --- Drag-and-drop reorder ---
@@ -373,6 +462,7 @@ export class EditScreen extends HTMLElement {
       moved: false,
     };
 
+    this.clearFaded();
     grid.dataset.dragging = 'true';
     card.dataset.dragging = 'true';
     card.setPointerCapture(event.pointerId);
@@ -458,6 +548,8 @@ export class EditScreen extends HTMLElement {
     if (pid !== undefined) this.pageIds.splice(to, 0, pid);
     const [attr] = this.attributions.splice(from, 1);
     if (attr !== undefined) this.attributions.splice(to, 0, attr);
+    const [orig] = this.originalPageNumbers.splice(from, 1);
+    if (orig !== undefined) this.originalPageNumbers.splice(to, 0, orig);
 
     void this.workingDoc?.movePage(from, to).catch((err) => {
       console.error('[pidief] Move impossible:', err);
