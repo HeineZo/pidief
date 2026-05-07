@@ -28,6 +28,7 @@ const escapeHtml = (s: string): string =>
 const MIN_GRID_COLUMNS = 3;
 const MAX_GRID_COLUMNS = 10;
 const DEFAULT_GRID_COLUMNS = 6;
+const DRAG_SLOT_SWITCH_HYSTERESIS_PX = 12;
 
 export class EditScreen extends HTMLElement {
   private _docs: EditScreenSource[] | null = null;
@@ -54,6 +55,8 @@ export class EditScreen extends HTMLElement {
     liveIdx: number;
     startX: number;
     startY: number;
+    pointerToCenterX: number;
+    pointerToCenterY: number;
     homes: { el: PiPageCard; cx: number; cy: number }[];
     moved: boolean;
   } | null = null;
@@ -450,6 +453,8 @@ export class EditScreen extends HTMLElement {
       const r = el.getBoundingClientRect();
       return { el, cx: r.left + r.width / 2, cy: r.top + r.height / 2 };
     });
+    const cardHome = homes[fromIdx];
+    if (!cardHome) return;
 
     this.dragSession = {
       cardEl: card,
@@ -458,6 +463,8 @@ export class EditScreen extends HTMLElement {
       liveIdx: fromIdx,
       startX: event.clientX,
       startY: event.clientY,
+      pointerToCenterX: event.clientX - cardHome.cx,
+      pointerToCenterY: event.clientY - cardHome.cy,
       homes,
       moved: false,
     };
@@ -481,7 +488,10 @@ export class EditScreen extends HTMLElement {
     const dy = event.clientY - sess.startY;
     sess.cardEl.style.transform = `translate(${dx}px, ${dy}px)`;
 
-    const cur = { x: event.clientX, y: event.clientY };
+    const cur = {
+      x: event.clientX - sess.pointerToCenterX,
+      y: event.clientY - sess.pointerToCenterY,
+    };
     let nearest = 0;
     let best = Infinity;
     for (let i = 0; i < sess.homes.length; i++) {
@@ -493,7 +503,12 @@ export class EditScreen extends HTMLElement {
       }
     }
 
-    if (nearest !== sess.liveIdx) {
+    const liveHome = sess.homes[sess.liveIdx];
+    const distToLive = liveHome ? Math.hypot(cur.x - liveHome.cx, cur.y - liveHome.cy) : Infinity;
+    const shouldSwitch =
+      nearest !== sess.liveIdx && best + DRAG_SLOT_SWITCH_HYSTERESIS_PX < distToLive;
+
+    if (shouldSwitch) {
       sess.liveIdx = nearest;
       const liveOrder = sess.homes.map((h) => h);
       const [moved] = liveOrder.splice(sess.fromIdx, 1);
@@ -529,8 +544,7 @@ export class EditScreen extends HTMLElement {
     const moved = sess.moved;
     this.dragSession = null;
 
-    // clear visual transforms after the settle transition (60ms ≈ end of curve)
-    window.setTimeout(() => {
+    const clearDragState = (): void => {
       for (const h of sess.homes) {
         h.el.style.transform = '';
       }
@@ -540,9 +554,17 @@ export class EditScreen extends HTMLElement {
         grid.dataset.dragging = 'false';
         delete grid.dataset.dragging;
       }
-    }, 180);
+    };
 
-    if (!moved || from === to) return;
+    if (!moved || from === to) {
+      clearDragState();
+      return;
+    }
+
+    const beforeRects = new Map<PiPageCard, DOMRect>();
+    for (const h of sess.homes) {
+      beforeRects.set(h.el, h.el.getBoundingClientRect());
+    }
 
     const [pid] = this.pageIds.splice(from, 1);
     if (pid !== undefined) this.pageIds.splice(to, 0, pid);
@@ -550,6 +572,43 @@ export class EditScreen extends HTMLElement {
     if (attr !== undefined) this.attributions.splice(to, 0, attr);
     const [orig] = this.originalPageNumbers.splice(from, 1);
     if (orig !== undefined) this.originalPageNumbers.splice(to, 0, orig);
+
+    for (const h of sess.homes) {
+      h.el.style.transition = 'none';
+      h.el.style.transform = '';
+    }
+
+    this.reconcile();
+
+    for (const h of sess.homes) {
+      const before = beforeRects.get(h.el);
+      if (!before) continue;
+      const after = h.el.getBoundingClientRect();
+      const dx = before.left - after.left;
+      const dy = before.top - after.top;
+      if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+        h.el.style.transform = `translate(${dx}px, ${dy}px)`;
+      }
+    }
+
+    sess.cardEl.dataset.dragging = 'false';
+    delete sess.cardEl.dataset.dragging;
+    if (grid) {
+      grid.dataset.dragging = 'false';
+      delete grid.dataset.dragging;
+    }
+
+    requestAnimationFrame(() => {
+      for (const h of sess.homes) {
+        h.el.style.transition = 'transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1)';
+        h.el.style.transform = '';
+      }
+    });
+    window.setTimeout(() => {
+      for (const h of sess.homes) {
+        h.el.style.transition = '';
+      }
+    }, 220);
 
     void this.workingDoc?.movePage(from, to).catch((err) => {
       console.error('[pidief] Move impossible:', err);
