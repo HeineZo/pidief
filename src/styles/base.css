@@ -22,6 +22,19 @@ button {
   font-family: inherit;
 }
 
+/* Curseur explicite pour l'état désactivé (natif + host Web Component) */
+button:disabled,
+input:disabled:not([type='hidden']),
+select:disabled,
+textarea:disabled {
+  cursor: not-allowed;
+}
+
+pi-button[disabled],
+pi-button:has(> button:disabled) {
+  cursor: not-allowed;
+}
+
 a {
   color: inherit;
   text-decoration: none;

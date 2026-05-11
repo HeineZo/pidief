@@ -4,7 +4,8 @@ import '@components/drop/DropZone/PiDropZone';
 import type { PiDropZone } from '@components/drop/DropZone/PiDropZone';
 import template from './uploadScreen.html?raw';
 import './uploadScreen.css';
-import { sendError } from '@util/Toast';
+import { sendError, sendWarning } from '@util/Toast';
+import { MAX_UPLOAD_PDFS } from '@util/uploadPdfLimits';
 import { formatBytes } from '@util/formatBytes';
 import { getPasteShortcutLabel } from '@util/GetPasteShortcutLabel';
 import { scrollToBottom } from '@util/scrollToBottom';
@@ -151,8 +152,28 @@ export class UploadScreen extends HTMLElement {
       .map((file) => ({ id: newId(), file }));
     if (items.length === 0) return;
 
-    this.files = [...this.files, ...items];
+    const remaining = MAX_UPLOAD_PDFS - this.files.length;
+    if (remaining <= 0) {
+      sendWarning(
+        `Limite de ${MAX_UPLOAD_PDFS} fichiers PDF atteinte. Retirez des fichiers pour en ajouter d'autres.`,
+      );
+      return;
+    }
+
+    const accepted = items.slice(0, remaining);
+    const skipped = items.length - accepted.length;
+
+    this.files = [...this.files, ...accepted];
     this.refreshFilesRegion();
+
+    if (skipped > 0) {
+      sendWarning(
+        skipped === 1
+          ? `Un fichier n'a pas été ajouté : limite de ${MAX_UPLOAD_PDFS} PDF.`
+          : `${skipped} fichiers n'ont pas été ajoutés : limite de ${MAX_UPLOAD_PDFS} PDF.`,
+      );
+    }
+
     if (shouldScroll) {
       scrollToBottom();
     }
@@ -258,8 +279,9 @@ export class UploadScreen extends HTMLElement {
     if (!region || !count || !chipsHost || !clearButton || !continueCta) return;
 
     const hasFiles = this.files.length > 0;
-    const plural = this.files.length > 1 ? 's' : '';
-    count.textContent = `${this.files.length} fichier${plural} ajouté${plural}`;
+    const n = this.files.length;
+    const plural = n > 1 ? 's' : '';
+    count.textContent = `${n} / ${MAX_UPLOAD_PDFS} fichier${plural} PDF ajouté${plural}`;
     count.hidden = !hasFiles;
     clearButton.hidden = !hasFiles;
     continueCta.hidden = !hasFiles;

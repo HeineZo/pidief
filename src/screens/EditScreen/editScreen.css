@@ -50,6 +50,14 @@ pi-edit-screen {
   flex: 1;
 }
 
+.pi-edit__pdf-limit {
+  font-size: var(--text-sm);
+  font-weight: 500;
+  color: var(--color-muted);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
 .pi-edit__hero {
   flex-shrink: 0;
   padding: var(--space-4) var(--space-12) var(--space-2);

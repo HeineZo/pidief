@@ -8,6 +8,8 @@ import { PiPageCard, type PageCardAction } from '@components/edit/PageCard/PiPag
 import template from './editScreen.html?raw';
 import './editScreen.css';
 import { scrollToBottom } from '@util/scrollToBottom';
+import { sendWarning } from '@util/Toast';
+import { MAX_UPLOAD_PDFS } from '@util/uploadPdfLimits';
 
 export type EditScreenSource = {
   doc: PdfDocument;
@@ -30,6 +32,8 @@ const MIN_GRID_COLUMNS = 3;
 const MAX_GRID_COLUMNS = 10;
 const DEFAULT_GRID_COLUMNS = 6;
 const DRAG_SLOT_SWITCH_HYSTERESIS_PX = 12;
+
+const activeSourcePdfCount = (attributions: number[]): number => new Set(attributions).size;
 
 export class EditScreen extends HTMLElement {
   private _docs: EditScreenSource[] | null = null;
@@ -144,6 +148,7 @@ export class EditScreen extends HTMLElement {
 
     const addInput = this.querySelector<HTMLInputElement>('[data-add-input]');
     this.querySelector('[data-action="add-pdf"]')?.addEventListener('click', () => {
+      if (activeSourcePdfCount(this.attributions) >= MAX_UPLOAD_PDFS) return;
       addInput?.click();
     });
     addInput?.addEventListener('change', () => {
@@ -253,9 +258,33 @@ export class EditScreen extends HTMLElement {
   private async addFiles(files: File[], shouldScroll = false): Promise<void> {
     const doc = this.workingDoc;
     if (!doc || !files.length) return;
+
+    const pdfFiles = files.filter(
+      (file) => file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'),
+    );
+    if (pdfFiles.length === 0) return;
+
+    const remaining = MAX_UPLOAD_PDFS - activeSourcePdfCount(this.attributions);
+    if (remaining <= 0) {
+      sendWarning(
+        `Limite de ${MAX_UPLOAD_PDFS} fichiers PDF atteinte. Supprimez des pages (ou des sources entières) pour en ajouter d'autres.`,
+      );
+      return;
+    }
+
+    const toProcess = pdfFiles.slice(0, remaining);
+    const skipped = pdfFiles.length - toProcess.length;
+    if (skipped > 0) {
+      sendWarning(
+        skipped === 1
+          ? `Un fichier n'a pas été ajouté : limite de ${MAX_UPLOAD_PDFS} PDF.`
+          : `${skipped} fichiers n'ont pas été ajoutés : limite de ${MAX_UPLOAD_PDFS} PDF.`,
+      );
+    }
+
     const engine = PdfEngine.shared();
 
-    for (const file of files) {
+    for (const file of toProcess) {
       let added: PdfDocument | null = null;
       try {
         added = await engine.open(file);
@@ -356,8 +385,36 @@ export class EditScreen extends HTMLElement {
     });
 
     this.renderLegend();
+    this.syncAddPdfControls();
 
     if (empty) empty.hidden = desiredIds.length > 0;
+  }
+
+  private syncAddPdfControls(): void {
+    const active = activeSourcePdfCount(this.attributions);
+    const atLimit = active >= MAX_UPLOAD_PDFS;
+
+    const hint = this.querySelector<HTMLElement>('[data-pdf-limit-hint]');
+    if (hint) {
+      hint.textContent = `${active} / ${MAX_UPLOAD_PDFS} fichiers PDF`;
+    }
+
+    const addBtn = this.querySelector<HTMLElement>('[data-action="add-pdf"]');
+    if (addBtn) {
+      addBtn.toggleAttribute('disabled', atLimit);
+      if (atLimit) {
+        addBtn.setAttribute(
+          'title',
+          `Limite de ${MAX_UPLOAD_PDFS} fichiers PDF. Supprimez des pages pour libérer une place.`,
+        );
+      } else {
+        addBtn.removeAttribute('title');
+      }
+      addBtn.querySelector('button')?.setAttribute('aria-describedby', 'edit-pdf-limit-hint');
+    }
+
+    const addInput = this.querySelector<HTMLInputElement>('[data-add-input]');
+    if (addInput) addInput.disabled = atLimit;
   }
 
   private renderLegend(): void {
