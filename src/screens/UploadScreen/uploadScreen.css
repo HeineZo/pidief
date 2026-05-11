@@ -29,20 +29,73 @@
 }
 
 .pi-upload__title {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: var(--text-5xl);
-  font-style: italic;
-  font-weight: 400;
-  line-height: var(--leading-tight);
+  font-style: normal;
+  font-weight: 500;
+  line-height: var(--leading-snug);
   letter-spacing: var(--tracking-tight);
   text-align: center;
   margin: 0;
   color: var(--color-text);
 }
 
+.pi-upload__title-lead {
+  font-weight: 800;
+}
+
+.pi-upload__title-soft {
+  font-weight: 400;
+}
+
 .pi-upload__title em {
   color: var(--color-accent);
   font-style: italic;
+  font-family: var(--font-serif);
+  font-weight: 400;
+}
+
+.pi-upload__title-row {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  column-gap: 0.22em;
+  row-gap: 0.06em;
+}
+
+.pi-upload__badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 0.95em;
+  height: 0.95em;
+  cursor: pointer;
+  transition: transform var(--transition-base);
+}
+
+.pi-upload__badge pi-icon svg {
+  width: 60%;
+  height: 60%;
+}
+
+.pi-upload__badge--square {
+  transform: rotate(-4deg);
+  background: var(--color-accent-bg);
+  color: var(--color-accent);
+  border-radius: var(--radius-lg);
+}
+
+.pi-upload__badge:hover {
+  transform: rotate(0deg) scale(1.05);
+}
+
+.pi-upload__badge--circle {
+  transform: rotate(5.5deg);
+  background: var(--color-accent);
+  color: var(--color-accent-light);
+  border-radius: var(--radius-full);
 }
 
 .pi-upload__sub {
