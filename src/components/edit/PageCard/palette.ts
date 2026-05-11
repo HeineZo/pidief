@@ -131,6 +131,6 @@ const PALETTE: readonly PageTint[] = [
   },
 ] as const;
 
-export function tintForSourceIndex(index: number): PageTint {
+export function tintForFileIndex(index: number): PageTint {
   return PALETTE[index % PALETTE.length]!;
 }

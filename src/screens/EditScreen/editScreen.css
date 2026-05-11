@@ -26,10 +26,10 @@ pi-edit-screen {
   top: 0;
   z-index: 5;
   flex-shrink: 0;
-  padding: var(--space-3) var(--space-12);
+  padding: var(--space-2) var(--space-12);
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--space-1);
   background: var(--color-bg);
   border-bottom: 1px solid transparent;
   transition: box-shadow 0.15s ease, border-color 0.15s ease;
@@ -43,7 +43,7 @@ pi-edit-screen {
 .pi-edit__toolbar {
   display: flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
 .pi-edit__toolbar-spacer {
@@ -98,8 +98,8 @@ pi-edit-screen {
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-5);
-  padding: var(--space-2) 0;
+  gap: var(--space-2);
+  padding: var(--space-1) 0;
   font-size: var(--text-sm);
   color: var(--color-text);
 }
@@ -108,14 +108,14 @@ pi-edit-screen {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
+  gap: var(--space-2);
   flex-wrap: nowrap;
 }
 
 .pi-edit__grid-controls {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-1);
   margin-left: auto;
   flex-shrink: 0;
 }
@@ -128,7 +128,7 @@ pi-edit-screen {
 .pi-edit__grid-slider-wrap {
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-1);
 }
 
 .pi-edit__grid-slider-wrap pi-icon {
@@ -217,14 +217,53 @@ pi-edit-screen {
 }
 
 .pi-edit__legend-item {
+  --pi-legend-file-color: var(--color-accent);
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--space-1);
   transition: opacity 0.15s ease;
 }
 
 .pi-edit__legend-item[data-faded='true'] {
   opacity: 0.25;
+}
+
+.pi-edit__legend-body {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-md);
+  background: transparent;
+  transition: background var(--transition-base);
+}
+
+.pi-edit__legend-main {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 0;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  cursor: pointer;
+  text-align: left;
+}
+
+.pi-edit__legend-main:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+.pi-edit__legend-main .pi-edit__legend-name {
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .pi-edit__legend-name {
@@ -235,6 +274,59 @@ pi-edit-screen {
   font-family: var(--font-mono);
   font-size: 10px;
   color: var(--color-faint);
+}
+
+.pi-edit__legend-item:hover .pi-edit__legend-body,
+.pi-edit__legend-item:focus-within .pi-edit__legend-body {
+  background: color-mix(in srgb, var(--pi-legend-file-color) 22%, transparent);
+}
+
+.pi-edit__legend-remove {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  box-sizing: border-box;
+  width: 0;
+  min-width: 0;
+  height: 22px;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+  border: 0;
+  border-radius: var(--radius-sm);
+  background: transparent;
+  color: color-mix(in srgb, var(--pi-legend-file-color) 88%, var(--color-text));
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transition:
+    opacity var(--transition-base),
+    width var(--transition-base),
+    min-width var(--transition-base),
+    background var(--transition-base);
+}
+
+.pi-edit__legend-item:hover .pi-edit__legend-remove,
+.pi-edit__legend-item:focus-within .pi-edit__legend-remove {
+  width: 22px;
+  min-width: 22px;
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.pi-edit__legend-remove:hover {
+  background: color-mix(in srgb, var(--pi-legend-file-color) 28%, transparent);
+}
+
+.pi-edit__legend-remove:focus-visible {
+  outline: 2px solid color-mix(in srgb, var(--pi-legend-file-color) 55%, var(--color-border-focus));
+  outline-offset: 2px;
+}
+
+.pi-edit__legend-remove pi-icon {
+  display: flex;
+  color: inherit;
 }
 
 .pi-edit__legend-marker {
@@ -349,9 +441,9 @@ pi-edit-screen {
   flex-shrink: 0;
   display: grid;
   grid-template-columns: repeat(var(--pi-edit-grid-columns, 6), minmax(0, 1fr));
-  gap: var(--space-2);
+  gap: var(--space-1);
   align-items: start;
-  margin: 0 var(--space-12) var(--space-8);
+  margin: 0 var(--space-12) var(--space-6);
 }
 
 .pi-edit__grid pi-page-card {
@@ -371,7 +463,7 @@ pi-edit-screen {
 }
 
 .pi-edit__empty {
-  padding: var(--space-12) var(--space-12);
+  padding: var(--space-8) var(--space-12);
   text-align: center;
   color: var(--color-muted);
   font-size: var(--text-base);
