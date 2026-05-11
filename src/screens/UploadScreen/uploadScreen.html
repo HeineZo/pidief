@@ -1,5 +1,30 @@
 <section class="pi-upload">
-  <h1 class="pi-upload__title">Vos PDFs,<br /><em>la confidentialité en plus</em></h1>
+  <h1 class="pi-upload__title" aria-labelledby="upload-heading-label">
+    <span id="upload-heading-label" class="sr-only">Vos PDFs, la confidentialité en plus</span>
+    <span aria-hidden="true"><span class="pi-upload__title-lead">Vos PDFs,</span><br /></span>
+    <span class="pi-upload__title-row">
+      <span aria-hidden="true" class="pi-upload__title-soft">la</span>
+      <button
+        type="button"
+        class="pi-upload__badge pi-upload__badge--square"
+        data-action="about"
+        aria-label="À propos"
+        tabindex="-1"
+      >
+        <pi-icon name="lock" size="56" stroke="2"></pi-icon>
+      </button>
+      <span aria-hidden="true" class="pi-upload__title-soft">en</span>
+      <button
+        type="button"
+        class="pi-upload__badge pi-upload__badge--circle"
+        data-action="browse"
+        aria-label="Choisir un fichier"
+        tabindex="-1"
+      >
+        <pi-icon name="plus" size="60" stroke="2.4"></pi-icon>
+      </button>
+    </span>
+  </h1>
 
   <p class="pi-upload__sub">
     Fusionnez, découpez, réordonnez, pivotez, bref tout ce dont vous rêviez.
@@ -7,8 +32,8 @@
   </p>
 
   <pi-drop-zone accept=".pdf">
-    <pi-button slot="actions" variant="primary" icon="upload" data-action="browse">
-      Parcourir les fichiers
+    <pi-button slot="actions" variant="primary" data-action="browse">
+      Choisir un fichier
     </pi-button>
     <pi-button slot="actions" variant="ghost" icon="paste" data-action="paste">
       Coller

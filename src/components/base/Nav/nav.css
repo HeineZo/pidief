@@ -34,6 +34,22 @@
   color: var(--color-text);
 }
 
+button.pi-nav__link {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  appearance: none;
+}
+
+button.pi-nav__link:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+
 .pi-nav__lang {
   display: inline-flex;
   gap: var(--space-1);

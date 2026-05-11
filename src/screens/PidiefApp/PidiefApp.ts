@@ -1,4 +1,5 @@
 import '@components/base/Nav/PiNav';
+import '@screens/AboutScreen/AboutScreen';
 import '@screens/UploadScreen/UploadScreen';
 import '@screens/EditScreen/EditScreen';
 import { PdfEngine } from '@core/pdf/PdfEngine';
@@ -26,6 +27,12 @@ export class PidiefApp extends HTMLElement {
 
     this.addEventListener('request-back', () => {
       history.pushState({}, '', '/');
+      this.renderRoute();
+    });
+
+    this.addEventListener('request-navigate', (event: Event) => {
+      const detail = (event as CustomEvent<{ path: string }>).detail;
+      history.pushState({}, '', detail.path);
       this.renderRoute();
     });
 
@@ -59,7 +66,7 @@ export class PidiefApp extends HTMLElement {
     if (!host) return;
 
     let path = window.location.pathname;
-    if (path !== '/' && path !== '/edit') {
+    if (path !== '/' && path !== '/edit' && path !== '/about') {
       path = '/';
       history.replaceState({}, '', '/');
     }
@@ -74,6 +81,13 @@ export class PidiefApp extends HTMLElement {
 
     if (path === '/edit' && !this.currentSlots?.length) {
       history.replaceState({}, '', '/');
+      path = '/';
+    }
+
+    if (path === '/about') {
+      host.replaceChildren();
+      host.append(document.createElement('pi-about-screen'));
+      return;
     }
 
     host.replaceChildren();
