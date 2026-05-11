@@ -340,7 +340,7 @@ export class EditScreen extends HTMLElement {
     const remaining = MAX_UPLOAD_PDFS - activeFileCount(this.pageFileIndex);
     if (remaining <= 0) {
       sendWarning(
-        `Limite de ${MAX_UPLOAD_PDFS} fichiers PDF atteinte. Supprimez des pages ou un fichier entier pour en ajouter d'autres.`,
+        `Limite de ${MAX_UPLOAD_PDFS} fichiers PDF atteinte. Supprimez un ou des fichiers pour en ajouter d'autres.`,
       );
       return;
     }
@@ -478,7 +478,7 @@ export class EditScreen extends HTMLElement {
       if (atLimit) {
         addBtn.setAttribute(
           'title',
-          `Limite de ${MAX_UPLOAD_PDFS} fichiers PDF. Supprimez des pages ou un fichier entier pour libérer une place.`,
+          `Limite de ${MAX_UPLOAD_PDFS} fichiers PDF. Supprimez un ou des fichiers pour libérer une place.`,
         );
       } else {
         addBtn.removeAttribute('title');
