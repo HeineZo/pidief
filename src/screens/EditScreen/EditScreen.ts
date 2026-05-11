@@ -7,6 +7,7 @@ import { tintForSourceIndex, type PageTint } from '@components/edit/PageCard/pal
 import { PiPageCard, type PageCardAction } from '@components/edit/PageCard/PiPageCard';
 import template from './editScreen.html?raw';
 import './editScreen.css';
+import { scrollToBottom } from '@util/scrollToBottom';
 
 export type EditScreenSource = {
   doc: PdfDocument;
@@ -149,7 +150,7 @@ export class EditScreen extends HTMLElement {
       if (!addInput.files) return;
       const files = Array.from(addInput.files);
       addInput.value = '';
-      void this.addFiles(files);
+      void this.addFiles(files, true);
     });
 
     this.querySelector('[data-action="continue"]')?.addEventListener('click', () => {
@@ -249,7 +250,7 @@ export class EditScreen extends HTMLElement {
 
   // --- Ajouter un PDF ---
 
-  private async addFiles(files: File[]): Promise<void> {
+  private async addFiles(files: File[], shouldScroll = false): Promise<void> {
     const doc = this.workingDoc;
     if (!doc || !files.length) return;
     const engine = PdfEngine.shared();
@@ -277,6 +278,11 @@ export class EditScreen extends HTMLElement {
       } finally {
         if (added) await added.close().catch(() => undefined);
       }
+    }
+
+    if (shouldScroll) {
+      const container = this.querySelector<HTMLElement>('.pi-edit');
+      scrollToBottom(container);
     }
   }
 

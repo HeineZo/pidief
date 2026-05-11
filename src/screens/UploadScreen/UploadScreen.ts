@@ -7,6 +7,7 @@ import './uploadScreen.css';
 import { sendError } from '@util/Toast';
 import { formatBytes } from '@util/formatBytes';
 import { getPasteShortcutLabel } from '@util/GetPasteShortcutLabel';
+import { scrollToBottom } from '@util/scrollToBottom';
 
 interface UploadFile {
   id: string;
@@ -59,7 +60,7 @@ export class UploadScreen extends HTMLElement {
     const dropZone = this.querySelector<PiDropZone>('pi-drop-zone');
     dropZone?.addEventListener('files-dropped', (event) => {
       const { files } = (event as CustomEvent<{ files: File[] }>).detail;
-      this.addFiles(files);
+      this.addFiles(files, true);
     });
 
     this.querySelector<HTMLElement>('[data-action=\"browse\"]')?.addEventListener(
@@ -131,12 +132,17 @@ export class UploadScreen extends HTMLElement {
     }, 220);
   }
 
-  private addFiles(incoming: File[]): void {
+  private addFiles(incoming: File[], shouldScroll = false): void {
     const items = incoming
       .filter((file) => file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'))
       .map((file) => ({ id: newId(), file }));
+    if (items.length === 0) return;
+
     this.files = [...this.files, ...items];
     this.refreshFilesRegion();
+    if (shouldScroll) {
+      scrollToBottom();
+    }
   }
 
   private getPdfFilesFromDataTransfer(data: DataTransfer | null): File[] {
