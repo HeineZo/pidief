@@ -7,6 +7,7 @@ import './uploadScreen.css';
 import { sendError } from '@util/Toast';
 import { formatBytes } from '@util/formatBytes';
 import { getPasteShortcutLabel } from '@util/GetPasteShortcutLabel';
+import { PdfEngine } from '@core/pdf/PdfEngine';
 
 interface UploadFile {
   id: string;
@@ -36,6 +37,7 @@ export class UploadScreen extends HTMLElement {
     this.render();
     window.addEventListener('paste', this.onWindowPaste);
     window.addEventListener('keydown', this.onWindowKeyDown);
+    PdfEngine.shared().warmup();
   }
 
   disconnectedCallback(): void {
@@ -62,14 +64,14 @@ export class UploadScreen extends HTMLElement {
       this.addFiles(files);
     });
 
-    this.querySelector<HTMLElement>('[data-action=\"browse\"]')?.addEventListener(
+    this.querySelector<HTMLElement>('[data-action="browse"]')?.addEventListener(
       'click',
       () => {
         dropZone?.openFileDialog();
       },
     );
 
-    this.querySelector<HTMLElement>('[data-action=\"paste\"]')?.addEventListener(
+    this.querySelector<HTMLElement>('[data-action="paste"]')?.addEventListener(
       'click',
       () => {
         void this.pasteFromClipboard();
@@ -84,11 +86,10 @@ export class UploadScreen extends HTMLElement {
       },
     );
 
-    this.addEventListener('click', (event) => {
-      const target = event.target as HTMLElement | null;
-      if (!target?.closest('[data-action=\"continue\"]')) return;
-      this.emitFilesReady();
-    });
+    this.querySelector<HTMLElement>('[data-action="continue"]')?.addEventListener(
+      'click',
+      () => this.emitFilesReady(),
+    );
   }
 
   private emitFilesReady(): void {

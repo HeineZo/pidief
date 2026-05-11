@@ -22,6 +22,10 @@ export class PdfEngine implements PdfEngineApi {
 
   private constructor() {}
 
+  warmup(): void {
+    void this.ensureWorker();
+  }
+
   async open(source: File | Blob | ArrayBuffer): Promise<PdfDocument> {
     const buffer = await readToArrayBuffer(source);
     const transferable = buffer.slice(0);

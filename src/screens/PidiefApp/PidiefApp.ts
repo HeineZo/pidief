@@ -4,6 +4,7 @@ import '@screens/EditScreen/EditScreen';
 import { PdfEngine } from '@core/pdf/PdfEngine';
 import { EditScreen, type EditScreenSource } from '@screens/EditScreen/EditScreen';
 import template from './pidiefApp.html?raw';
+import { sendError } from '@util/Toast';
 
 export class PidiefApp extends HTMLElement {
   private routeHost: HTMLElement | null = null;
@@ -49,6 +50,7 @@ export class PidiefApp extends HTMLElement {
     } catch (err) {
       await Promise.all(slots.map((s) => s.doc.close()));
       console.error('[pidief] Ouverture PDF impossible:', err);
+      sendError("Impossible d'ouvrir le PDF. Réessayez.");
     }
   }
 
