@@ -22,7 +22,6 @@ button {
   font-family: inherit;
 }
 
-/* Curseur explicite pour l'état désactivé (natif + host Web Component) */
 button:disabled,
 input:disabled:not([type='hidden']),
 select:disabled,
