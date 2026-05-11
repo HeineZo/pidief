@@ -39,6 +39,16 @@ export class PiNav extends HTMLElement {
 
     this.innerHTML = html.replace('__LANG_BUTTONS__', langButtons);
 
+    this.querySelector<HTMLButtonElement>('[data-nav="about"]')?.addEventListener('click', () => {
+      this.dispatchEvent(
+        new CustomEvent<{ path: string }>('request-navigate', {
+          detail: { path: '/about' },
+          bubbles: true,
+          composed: true,
+        }),
+      );
+    });
+
     this.querySelectorAll<HTMLButtonElement>('[data-lang]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const next = btn.dataset.lang;

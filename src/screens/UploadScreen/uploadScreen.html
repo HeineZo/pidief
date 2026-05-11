@@ -1,15 +1,29 @@
 <section class="pi-upload">
-  <h1 class="pi-upload__title" aria-label="Vos PDFs, la confidentialité en plus">
-    <span aria-hidden="true"><span class="pi-upload__title-lead">Vos PDFs,</span><br /><span class="pi-upload__title-row"><span class="pi-upload__title-soft">la</span>
-      <span class="pi-upload__badge pi-upload__badge--square">
+  <h1 class="pi-upload__title" aria-labelledby="upload-heading-label">
+    <span id="upload-heading-label" class="sr-only">Vos PDFs, la confidentialité en plus</span>
+    <span aria-hidden="true"><span class="pi-upload__title-lead">Vos PDFs,</span><br /></span>
+    <span class="pi-upload__title-row">
+      <span aria-hidden="true" class="pi-upload__title-soft">la</span>
+      <button
+        type="button"
+        class="pi-upload__badge pi-upload__badge--square"
+        data-action="about"
+        aria-label="À propos"
+        tabindex="-1"
+      >
         <pi-icon name="lock" size="56" stroke="2"></pi-icon>
-      </span>
-      <span class="pi-upload__title-soft">en</span>
-      <span class="pi-upload__badge pi-upload__badge--circle">
+      </button>
+      <span aria-hidden="true" class="pi-upload__title-soft">en</span>
+      <button
+        type="button"
+        class="pi-upload__badge pi-upload__badge--circle"
+        data-action="browse"
+        aria-label="Choisir un fichier"
+        tabindex="-1"
+      >
         <pi-icon name="plus" size="60" stroke="2.4"></pi-icon>
-      </span>
-    </span></span>
-    <span class="sr-only">Vos PDFs, la confidentialité en plus</span>
+      </button>
+    </span>
   </h1>
 
   <p class="pi-upload__sub">

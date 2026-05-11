@@ -75,6 +75,19 @@
   transition: transform var(--transition-base);
 }
 
+button.pi-upload__badge {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  font: inherit;
+  appearance: none;
+}
+
+button.pi-upload__badge:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 3px;
+}
+
 .pi-upload__badge pi-icon svg {
   width: 60%;
   height: 60%;
