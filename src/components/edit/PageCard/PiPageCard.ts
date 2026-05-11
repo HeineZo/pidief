@@ -13,7 +13,7 @@ const isAction = (value: string | null): value is PageCardAction =>
 
 export class PiPageCard extends HTMLElement {
   static get observedAttributes(): string[] {
-    return ['page-index', 'source-name', 'display-order', 'original-page'];
+    return ['page-index', 'file-name', 'display-order', 'original-page'];
   }
 
   private _doc: PdfDocument | null = null;
@@ -96,7 +96,7 @@ export class PiPageCard extends HTMLElement {
   }
 
   private updateFooter(): void {
-    const name = this.getAttribute('source-name') ?? '';
+    const name = this.getAttribute('file-name') ?? '';
     const label = this.querySelector<HTMLElement>('[data-label]');
     const footer = this.querySelector<HTMLElement>('.pi-page-card__footer');
     const patternEl = this.querySelector<HTMLElement>('[data-pattern]');
