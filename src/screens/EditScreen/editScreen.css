@@ -281,7 +281,6 @@ pi-edit-screen {
   background: color-mix(in srgb, var(--pi-legend-file-color) 22%, transparent);
 }
 
-/* Largeur nulle au repos : la poubelle ne réserve sa place qu'au survol / focus-within */
 .pi-edit__legend-remove {
   display: inline-flex;
   align-items: center;
