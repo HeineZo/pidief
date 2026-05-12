@@ -1,10 +1,16 @@
 <div class="pi-page-card">
-  <div class="pi-page-card__shell">
-    <div class="pi-page-card__canvas-wrap" data-canvas-wrap>
-      <canvas class="pi-page-card__canvas" data-canvas></canvas>
-    </div>
-    <div class="pi-page-card__num" data-num aria-hidden="true"></div>
-    <div class="pi-page-card__actions" data-actions>
+  <header class="pi-page-card__title-bar">
+    <i class="pi-pattern" data-pattern aria-hidden="true"></i>
+    <span class="pi-page-card__label" data-label></span>
+  </header>
+  <div class="pi-page-card__actions-frame" data-actions-frame>
+    <span class="pi-page-card__actions-handle" aria-hidden="true"></span>
+    <div
+      class="pi-page-card__actions"
+      data-actions
+      role="toolbar"
+      aria-label="Actions de la page"
+    >
       <button
         type="button"
         class="pi-page-card__action"
@@ -25,8 +31,10 @@
       </button>
     </div>
   </div>
-  <footer class="pi-page-card__footer">
-    <i class="pi-pattern" data-pattern aria-hidden="true"></i>
-    <span class="pi-page-card__label" data-label></span>
-  </footer>
+  <div class="pi-page-card__shell">
+    <div class="pi-page-card__canvas-wrap" data-canvas-wrap>
+      <canvas class="pi-page-card__canvas" data-canvas></canvas>
+    </div>
+    <div class="pi-page-card__num" data-num aria-hidden="true"></div>
+  </div>
 </div>
