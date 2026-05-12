@@ -233,7 +233,7 @@ pi-edit-screen {
 
 .pi-edit__legend-count {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   color: var(--color-faint);
 }
 

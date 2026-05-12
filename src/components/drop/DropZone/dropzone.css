@@ -85,7 +85,7 @@
 .sub {
   margin-top: -14px;
   font-family: var(--font-sans, 'Geist', system-ui, sans-serif);
-  font-size: var(--text-base, 14px);
+  font-size: var(--text-base, 16px);
   color: var(--color-muted, #7a5c28);
   text-align: center;
 }
@@ -100,7 +100,7 @@
 
 .formats {
   font-family: var(--font-mono, 'Geist Mono', monospace);
-  font-size: var(--text-xs, 11px);
+  font-size: var(--text-xs, 14px);
   color: var(--color-faint, #b89a60);
   letter-spacing: 0.05em;
 }

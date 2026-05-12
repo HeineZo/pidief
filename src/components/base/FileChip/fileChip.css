@@ -46,7 +46,7 @@
 }
 
 .pi-file-chip__name {
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--chip-color);
   white-space: nowrap;
@@ -57,7 +57,7 @@
 
 .pi-file-chip__meta {
   font-family: var(--font-mono);
-  font-size: 10px;
+  font-size: var(--text-xs);
   color: var(--chip-meta-color);
 }
 

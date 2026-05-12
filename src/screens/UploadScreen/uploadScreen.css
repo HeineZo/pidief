@@ -140,7 +140,7 @@ button.pi-upload__badge:focus-visible {
 }
 
 .pi-upload__files-count {
-  font-size: 13px;
+  font-size: var(--text-sm);
   font-weight: 500;
   color: var(--color-muted);
 }

@@ -95,11 +95,11 @@
   --font-sans:   'Geist', system-ui, sans-serif;
   --font-mono:   'Geist Mono', 'Menlo', monospace;
 
-  --text-xs:    11px;
-  --text-sm:    12px;
-  --text-base:  14px;
-  --text-md:    16px;
-  --text-lg:    17px;
+  --text-xs:    14px;
+  --text-sm:    15px;
+  --text-base:  16px;
+  --text-md:    17px;
+  --text-lg:    18px;
   --text-xl:    22px;
   --text-2xl:   28px;
   --text-3xl:   40px;
