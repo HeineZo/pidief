@@ -198,8 +198,9 @@ export class AboutScreen extends HTMLElement {
     tbody: HTMLElement,
     options: { animate: boolean } = { animate: true },
   ): void {
-    nameEl.textContent = DISPLAY_NAME[id];
-    liveEl.textContent = `Tableau mis à jour : comparaison avec ${DISPLAY_NAME[id]}.`;
+    const competitorName = DISPLAY_NAME[id];
+    nameEl.textContent = competitorName;
+    liveEl.textContent = `Tableau mis à jour : comparaison avec ${competitorName}.`;
 
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     if (options.animate && !reduceMotion) {
@@ -221,6 +222,7 @@ export class AboutScreen extends HTMLElement {
 
       const cell = COMPARE_DATA[key].them[id];
       if (!cell) continue;
+      themTd.dataset.mobileLabel = competitorName;
       themTd.innerHTML = renderCompareCell(cell.value, { title: cell.title, label: cell.label });
       themTd.setAttribute('data-compare-value', cell.value);
     }

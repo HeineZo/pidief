@@ -2,6 +2,7 @@
   display: block;
   width: 100%;
   max-width: 680px;
+  box-sizing: border-box;
 }
 
 .wrap {
@@ -107,6 +108,56 @@
 
 input[type='file'] {
   display: none;
+}
+
+@media (max-width: 640px) {
+  .ring {
+    inset: -8px;
+    border-radius: 28px;
+  }
+
+  .zone {
+    padding: var(--space-10, 40px) var(--space-5, 20px);
+    gap: var(--space-4, 16px);
+  }
+
+  .icon {
+    width: 48px;
+    height: 48px;
+  }
+
+  .title {
+    font-size: var(--text-xl, 22px);
+    text-align: center;
+  }
+
+  .sub {
+    margin-top: -10px;
+  }
+
+  .actions {
+    display: grid;
+    width: 100%;
+    max-width: 220px;
+    gap: var(--space-2, 8px);
+  }
+
+  .actions ::slotted(pi-button) {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .formats {
+    max-width: 22ch;
+    text-align: center;
+    line-height: 1.35;
+  }
+}
+
+@media (max-width: 360px) {
+  .zone {
+    padding: var(--space-8, 32px) var(--space-4, 16px);
+  }
 }
 
 @keyframes pulse-ring {
