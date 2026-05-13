@@ -5,6 +5,7 @@ import './pageCard.css';
 import type { PageTint } from './palette';
 
 export type PageCardAction = 'rotate' | 'delete';
+/** Direction émise par `page-move` pour le swap clavier dans la grille d’édition. */
 export type PageMoveDirection = 'left' | 'right' | 'up' | 'down';
 
 const ACTIONS: ReadonlySet<PageCardAction> = new Set(['rotate', 'delete']);
@@ -55,6 +56,10 @@ export class PiPageCard extends HTMLElement {
     if (this.isConnected) this.scheduleDraw();
   }
 
+  /**
+   * Monte le template, rend la carte focusable (`tabindex`, `aria-roledescription`) et branche
+   * clavier / actions pour l’accessibilité.
+   */
   connectedCallback(): void {
     this._abort = new AbortController();
     if (!this.querySelector('.pi-page-card')) {
@@ -101,6 +106,13 @@ export class PiPageCard extends HTMLElement {
     });
   }
 
+  /**
+   * Clavier sur l’élément hôte uniquement (`event.target === this`) :
+   * - **Entrée** : rend les boutons `[data-action]` tabulables et focus le premier (Pivoter).
+   * - **Flèches** : émet `page-move` (sauf avec Shift, pour laisser Shift+Tab sortir des actions).
+   * - **focusout** : si le focus quitte la carte, repasse les boutons en `tabindex=-1` pour que Tab
+   *   enchaîne uniquement les cadres.
+   */
   private bindKeyboard(): void {
     if (this._keyboardBound) return;
     this._keyboardBound = true;
@@ -136,6 +148,9 @@ export class PiPageCard extends HTMLElement {
     });
   }
 
+  /**
+   * @param tabbable - `true` : les boutons d’action entrent dans l’ordre de tabulation ; `false` : `tabindex=-1`.
+   */
   private setActionsTabbable(tabbable: boolean): void {
     const buttons = this.querySelectorAll<HTMLButtonElement>('[data-action]');
     buttons.forEach((btn) => {
@@ -151,6 +166,10 @@ export class PiPageCard extends HTMLElement {
     this.style.setProperty('--pi-page-label-color', t.labelColor);
   }
 
+  /**
+   * Met à jour le pied de carte (libellé, titre, motif, numéro d’ordre) et l’`aria-label` de l’hôte
+   * pour les lecteurs d’écran (position + `total-pages` + consigne flèches).
+   */
   private updateFooter(): void {
     const name = this.getAttribute('file-name') ?? '';
     const label = this.querySelector<HTMLElement>('[data-label]');
@@ -186,6 +205,9 @@ export class PiPageCard extends HTMLElement {
     this.updateHostAriaLabel(pageLabel, cleanName, n);
   }
 
+  /**
+   * Construit l’`aria-label` du custom element à partir des attributs `display-order` et `total-pages`.
+   */
   private updateHostAriaLabel(pageLabel: string, cleanName: string, displayOrder: number): void {
     const totalRaw = this.getAttribute('total-pages');
     const total = totalRaw !== null ? Number.parseInt(totalRaw, 10) : NaN;
