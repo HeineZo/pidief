@@ -1,6 +1,7 @@
-<section class="pi-edit">
+<section class="pi-edit" aria-labelledby="edit-screen-title">
   <div class="pi-edit__top-sentinel" data-scroll-sentinel aria-hidden="true"></div>
-  <a class="pi-edit__skip-link" href="#edit-first-legend-file-name" data-action="skip-to-first-legend-file">Passer au contenu principal d'édition</a>
+  <a class="pi-edit__skip-link" href="#edit-grid" data-action="skip-to-first-legend-file">Passer au contenu principal d'édition</a>
+  <h1 id="edit-screen-title" class="sr-only">Édition du PDF</h1>
   <header class="pi-edit__head">
     <div class="pi-edit__toolbar">
       <pi-button variant="ghost" icon="arrow-left" data-action="back">Retour</pi-button>
@@ -14,8 +15,9 @@
       </div>
     </div>
     <div class="pi-edit__legend-row">
-      <div class="pi-edit__legend" data-legend></div>
+      <ul class="pi-edit__legend" data-legend aria-label="Fichiers PDF du projet"></ul>
       <div class="pi-edit__grid-controls" role="group" aria-labelledby="grid-columns-label">
+        <span id="grid-columns-label" class="sr-only">Densité de la grille</span>
         <div class="pi-edit__grid-slider-wrap">
           <pi-icon name="grid-small" size="18" stroke="1.5" aria-hidden="true"></pi-icon>
           <input
@@ -26,6 +28,7 @@
             max="10"
             step="1"
             value="3"
+            aria-label="Densité de la grille"
             aria-describedby="grid-columns-value"
             data-grid-columns-slider
           />
@@ -43,8 +46,10 @@
     </div>
   </header>
   <div
+    id="edit-grid"
     class="pi-edit__grid"
     data-grid
+    role="list"
     aria-label="Pages PDF, naviguez avec Tab et déplacez avec les flèches"
   ></div>
   <div class="pi-edit__empty" data-empty hidden>

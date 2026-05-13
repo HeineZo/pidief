@@ -67,8 +67,8 @@
 }
 
 .pi-file-chip__remove {
-  width: 18px;
-  height: 18px;
+  width: 24px;
+  height: 24px;
   border-radius: 50%;
   background: rgba(30, 20, 8, 0.08);
   border: 0;
@@ -84,4 +84,9 @@
 
 .pi-file-chip__remove:hover {
   background: rgba(30, 20, 8, 0.15);
+}
+
+.pi-file-chip__remove:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
 }

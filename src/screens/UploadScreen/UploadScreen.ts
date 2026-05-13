@@ -7,7 +7,10 @@ import './uploadScreen.css';
 import { sendError, sendWarning } from '@util/Toast';
 import { MAX_UPLOAD_PDFS } from '@util/uploadPdfLimits';
 import { formatBytes } from '@util/formatBytes';
-import { getPasteShortcutLabel } from '@util/GetPasteShortcutLabel';
+import {
+  getPasteShortcutAccessibleLabel,
+  getPasteShortcutLabel,
+} from '@util/GetPasteShortcutLabel';
 import { scrollToBottom } from '@util/scrollToBottom';
 import { PdfEngine } from '@core/pdf/PdfEngine';
 
@@ -108,10 +111,15 @@ export class UploadScreen extends HTMLElement {
   private refreshPasteButtonLabel(): void {
     const pasteHost = this.querySelector<HTMLElement>('[data-action=\"paste\"]');
     if (!pasteHost) return;
-    const labelSpan = pasteHost.querySelector<HTMLSpanElement>('button.pi-button span');
+    const button = pasteHost.querySelector<HTMLButtonElement>('button.pi-button');
+    const labelSpan = button?.querySelector<HTMLSpanElement>('span');
     if (labelSpan) {
       labelSpan.textContent = `Coller ${getPasteShortcutLabel()}`;
     }
+    button?.setAttribute(
+      'aria-label',
+      `Coller (raccourci ${getPasteShortcutAccessibleLabel()})`,
+    );
   }
 
   private flashPasteButtonHover(): void {

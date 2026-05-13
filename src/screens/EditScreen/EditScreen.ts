@@ -317,16 +317,24 @@ export class EditScreen extends HTMLElement {
     if (card && card.dataset.removing === 'true') return;
     if (card) card.dataset.removing = 'true';
 
+    const focusWasInsideCard = !!card && card.contains(document.activeElement);
+
     const reduceMotion =
       window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
     const animationDone = new Promise<void>((resolve) => {
       window.setTimeout(resolve, reduceMotion ? 0 : 180);
     });
 
-    this.removalChain = this.removalChain.then(() => this.removePage(pageId, animationDone));
+    this.removalChain = this.removalChain.then(() =>
+      this.removePage(pageId, animationDone, focusWasInsideCard),
+    );
   }
 
-  private async removePage(pageId: string, animationDone: Promise<void>): Promise<void> {
+  private async removePage(
+    pageId: string,
+    animationDone: Promise<void>,
+    restoreFocus: boolean,
+  ): Promise<void> {
     const doc = this.workingDoc;
     if (!doc) return;
     const idx = this.pageIds.indexOf(pageId);
@@ -344,6 +352,7 @@ export class EditScreen extends HTMLElement {
       this.animateReorder(() => {
         this.reconcile();
       });
+      if (restoreFocus) this.restoreFocusAfterPageRemoval(idx);
     } catch (err) {
       const card = this.cards.get(pageId);
       if (card) delete card.dataset.removing;
@@ -351,6 +360,44 @@ export class EditScreen extends HTMLElement {
     } finally {
       doc.addEventListener('change', this.onWorkingChange);
     }
+  }
+
+  /**
+   * Après suppression d'un fichier complet, replace le focus sur l'item de
+   * légende voisin restant, sinon sur "Ajouter un PDF".
+   */
+  private restoreFocusAfterFileRemoval(removedFileIndex: number): void {
+    const items = Array.from(
+      this.querySelectorAll<HTMLElement>('.pi-edit__legend-item'),
+    );
+    const next = items[removedFileIndex] ?? items[removedFileIndex - 1] ?? items[0];
+    const button = next?.querySelector<HTMLButtonElement>(
+      'button[data-action="scroll-to-file"]',
+    );
+    if (button) {
+      button.focus();
+      return;
+    }
+    const addBtn = this.querySelector<HTMLElement>('[data-action="add-pdf"] button');
+    addBtn?.focus();
+  }
+
+  /**
+   * Après suppression d'une page, redonne le focus à un point d'ancrage clavier
+   * stable : la carte qui occupe désormais la position de celle qui a disparu,
+   * sinon la carte précédente, sinon le bouton "Ajouter un PDF".
+   */
+  private restoreFocusAfterPageRemoval(removedIdx: number): void {
+    const target = this.pageIds[removedIdx] ?? this.pageIds[removedIdx - 1];
+    if (target) {
+      const card = this.cards.get(target);
+      if (card) {
+        card.focus();
+        return;
+      }
+    }
+    const addBtn = this.querySelector<HTMLElement>('[data-action="add-pdf"] button');
+    addBtn?.focus();
   }
 
   private readonly onRemoveMergedFileClick = (event: MouseEvent): void => {
@@ -361,7 +408,7 @@ export class EditScreen extends HTMLElement {
     if (!fileId) return;
     event.preventDefault();
     event.stopPropagation();
-    this.enqueueRemoval(fileId);
+    this.enqueueRemoval(fileId, true);
   };
 
   /**
@@ -416,8 +463,10 @@ export class EditScreen extends HTMLElement {
    * sur la chaîne. La résolution par `fileId` reste correcte même si les indices
    * `fileMetas` ont bougé entre le clic et l'exécution effective.
    */
-  private enqueueRemoval(fileId: string): void {
-    this.removalChain = this.removalChain.then(() => this.removeMergedFile(fileId));
+  private enqueueRemoval(fileId: string, restoreFocus = false): void {
+    this.removalChain = this.removalChain.then(() =>
+      this.removeMergedFile(fileId, restoreFocus),
+    );
   }
 
   /**
@@ -433,7 +482,7 @@ export class EditScreen extends HTMLElement {
    * sont identifiés par un `id` stable plutôt que par index pour éviter qu'un
    * décalage post-splice ne fasse cibler le mauvais fichier.
    */
-  private async removeMergedFile(fileId: string): Promise<void> {
+  private async removeMergedFile(fileId: string, restoreFocus = false): Promise<void> {
     const doc = this.workingDoc;
     if (!doc) return;
     const fileIndex = this.fileMetas.findIndex((m) => m.id === fileId);
@@ -482,6 +531,7 @@ export class EditScreen extends HTMLElement {
       this.animateReorder(() => {
         this.reconcile();
       });
+      if (restoreFocus) this.restoreFocusAfterFileRemoval(fileIndex);
     } catch (err) {
       for (const card of cardsToRemove) delete card.dataset.removing;
       if (legendItem) delete legendItem.dataset.removing;
@@ -644,7 +694,9 @@ export class EditScreen extends HTMLElement {
 
     const hint = this.querySelector<HTMLElement>('[data-pdf-limit-hint]');
     if (hint) {
-      hint.textContent = `${active} / ${MAX_UPLOAD_PDFS} fichiers PDF`;
+      hint.textContent = atLimit
+        ? `${active} / ${MAX_UPLOAD_PDFS} fichiers PDF (limite atteinte, supprimez un fichier pour en ajouter un autre)`
+        : `${active} / ${MAX_UPLOAD_PDFS} fichiers PDF`;
     }
 
     const addBtns = this.querySelectorAll<HTMLButtonElement>('[data-action="add-pdf"]');
@@ -716,7 +768,7 @@ export class EditScreen extends HTMLElement {
         const ariaScroll = escapeHtml(`Aller à la première page dans la grille : ${meta.fileName}`);
         const fileNameId = i === 0 ? ' id="edit-first-legend-file-name"' : '';
         const fileId = escapeHtml(meta.id);
-        return `<span class="pi-edit__legend-item" data-file-index="${i}" data-file-id="${fileId}" style="--pi-legend-file-color:${escapeHtml(meta.tint.color)}"><span class="pi-edit__legend-body"><button type="button" class="pi-edit__legend-main" data-action="scroll-to-file" data-file-id="${fileId}" aria-label="${ariaScroll}" title="Voir la première page dans la grille">${marker}<span class="pi-edit__legend-name"${fileNameId}>${escapeHtml(meta.fileName)}</span><span class="pi-edit__legend-count">${count} p.</span></button><button type="button" class="pi-edit__legend-remove" data-action="remove-file" data-file-id="${fileId}" title="Retirer ce fichier du projet" aria-label="${ariaRemove}"><pi-icon name="trash" size="14"></pi-icon></button></span></span>`;
+        return `<li class="pi-edit__legend-item" data-file-index="${i}" data-file-id="${fileId}" style="--pi-legend-file-color:${escapeHtml(meta.tint.color)}"><span class="pi-edit__legend-body"><button type="button" class="pi-edit__legend-main" data-action="scroll-to-file" data-file-id="${fileId}" aria-label="${ariaScroll}" title="Voir la première page dans la grille">${marker}<span class="pi-edit__legend-name"${fileNameId}>${escapeHtml(meta.fileName)}</span><span class="pi-edit__legend-count">${count} p.</span></button><button type="button" class="pi-edit__legend-remove" data-action="remove-file" data-file-id="${fileId}" title="Retirer ce fichier du projet" aria-label="${ariaRemove}"><pi-icon name="trash" size="14"></pi-icon></button></span></li>`;
       })
       .join('');
   }
