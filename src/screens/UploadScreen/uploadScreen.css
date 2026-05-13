@@ -7,13 +7,14 @@ pi-upload-screen {
 .pi-upload {
   flex: 1;
   width: 100%;
+  min-height: 0;
   min-width: 0;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 0 var(--space-12) var(--space-12);
+  justify-content: flex-start;
+  padding: var(--space-4) var(--space-12) var(--space-12);
   gap: var(--space-8);
 }
 
