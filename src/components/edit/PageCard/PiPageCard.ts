@@ -290,12 +290,10 @@ export class PiPageCard extends HTMLElement {
       bitmap = rendered.bitmap;
       canvas.width = rendered.width;
       canvas.height = rendered.height;
-      canvas.style.width = '100%';
-      canvas.style.height = 'auto';
+      canvas.style.removeProperty('width');
+      canvas.style.removeProperty('height');
       const wrap = canvas.parentElement;
-      if (wrap) {
-        wrap.style.aspectRatio = `${rendered.width} / ${rendered.height}`;
-      }
+      wrap?.style.removeProperty('aspect-ratio');
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
       ctx.drawImage(bitmap, 0, 0);

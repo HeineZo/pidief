@@ -1,5 +1,9 @@
 .pi-page-card {
   position: relative;
+  box-sizing: border-box;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
@@ -143,15 +147,25 @@ pi-page-card[data-dragging='true']:has(.pi-page-card__actions-frame:hover) .pi-p
 
 .pi-page-card__shell {
   position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   border-radius: var(--radius-sm);
   overflow: hidden;
-  background: var(--color-card);
+  /* Teinte fichier (pas le blanc carte) : bandes autour d’un aperçu pivoté alignées sur la palette Miel. */
+  background: color-mix(
+    in srgb,
+    var(--pi-page-tint-bg, var(--color-bg-subtle)) 92%,
+    var(--pi-page-tint-border, var(--color-border)) 8%
+  );
   box-shadow: var(--shadow-xs);
 }
 
 .pi-page-card__canvas-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
-  aspect-ratio: 0.77;
   display: flex;
   align-items: center;
   justify-content: center;
