@@ -3,7 +3,7 @@
  *
  * Shadow DOM : isole l'overlay pulse-ring et l'\u00e9tat dragging.
  * Les CSS custom properties h\u00e9rit\u00e9es de :root traversent le shadow,
- * donc on r\u00e9utilise les tokens du DS (`--color-accent`, `--font-serif`, ...).
+ * donc on r\u00e9utilise les tokens du DS (`--color-accent`, `--font-sans`, ...).
  *
  * \u00c9v\u00e9nements :
  *  - `files-dropped` (CustomEvent<{ files: File[] }>) : files d\u00e9pos\u00e9s ou s\u00e9lectionn\u00e9s

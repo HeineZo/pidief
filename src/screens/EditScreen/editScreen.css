@@ -71,7 +71,7 @@ pi-edit-screen {
 }
 
 .pi-edit__title {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: var(--text-3xl);
   font-style: italic;
   font-weight: 400;
