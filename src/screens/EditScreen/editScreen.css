@@ -482,6 +482,12 @@ pi-edit-screen {
   height: 100%;
   min-height: 0;
   min-width: 0;
+  transform-origin: 50% 50%;
+}
+
+.pi-edit__grid[data-dragging='true'],
+.pi-edit__grid[data-dragging='true'] pi-page-card {
+  touch-action: none;
 }
 
 .pi-edit__grid[data-dragging='true'] pi-page-card {
