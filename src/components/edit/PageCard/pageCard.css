@@ -6,6 +6,10 @@ pi-page-card {
 
 .pi-page-card {
   position: relative;
+  box-sizing: border-box;
+  flex: 1;
+  min-height: 0;
+  min-width: 0;
   display: flex;
   flex-direction: column;
   gap: var(--space-1);
@@ -150,15 +154,24 @@ pi-page-card[data-dragging='true']:has(.pi-page-card__actions-frame:hover) .pi-p
 
 .pi-page-card__shell {
   position: relative;
+  flex: 1 1 auto;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
   border-radius: var(--radius-sm);
   overflow: hidden;
-  background: var(--color-card);
+  background: color-mix(
+    in srgb,
+    var(--pi-page-tint-bg, var(--color-bg-subtle)) 92%,
+    var(--pi-page-tint-border, var(--color-border)) 8%
+  );
   box-shadow: var(--shadow-xs);
 }
 
 .pi-page-card__canvas-wrap {
+  flex: 1 1 auto;
+  min-height: 0;
   width: 100%;
-  aspect-ratio: 0.77;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -166,10 +179,12 @@ pi-page-card[data-dragging='true']:has(.pi-page-card__actions-frame:hover) .pi-p
 
 .pi-page-card__canvas {
   display: block;
+  box-sizing: border-box;
+  /* Remplit la largeur du cadre (grille plus étroite en colonnes) ; la hauteur suit le ratio du bitmap. */
+  width: 100%;
   max-width: 100%;
-  max-height: 100%;
-  width: auto;
   height: auto;
+  max-height: 100%;
   -webkit-touch-callout: none;
 }
 

@@ -1,3 +1,4 @@
+import '@components/base/Button/PiButton';
 import template from './aboutScreen.html?raw';
 import './aboutScreen.css';
 import aboutCompareManifest from './aboutCompare.json';
@@ -123,6 +124,7 @@ function renderCompareCell(value: CompareCell, options?: CompareCellOptions): st
 export class AboutScreen extends HTMLElement {
   private compareAbort: AbortController | null = null;
   private howAbort: AbortController | null = null;
+  private navAbort: AbortController | null = null;
   private howStepTimer: number | null = null;
   private activeCompetitor: CompetitorId = 'iLovePDF';
   private activeHowStep = 0;
@@ -130,6 +132,7 @@ export class AboutScreen extends HTMLElement {
   /** Monte le template puis initialise les interactions locales à l’écran. */
   connectedCallback(): void {
     this.innerHTML = template;
+    this.initNavActions();
     this.initCompareTable();
     this.initHowFlow();
   }
@@ -140,7 +143,34 @@ export class AboutScreen extends HTMLElement {
     this.compareAbort = null;
     this.howAbort?.abort();
     this.howAbort = null;
+    this.navAbort?.abort();
+    this.navAbort = null;
     this.clearHowStepTimer();
+  }
+
+  /** Retour accueil et CTA : émet `request-navigate` comme `<pi-nav>`. */
+  private initNavActions(): void {
+    this.navAbort?.abort();
+    this.navAbort = new AbortController();
+    const { signal } = this.navAbort;
+
+    this.addEventListener(
+      'click',
+      (event) => {
+        const btnHost = (event.target as HTMLElement).closest<HTMLElement>('pi-button[data-action]');
+        if (!btnHost || !this.contains(btnHost)) return;
+        const action = btnHost.getAttribute('data-action');
+        if (action !== 'back' && action !== 'open-app') return;
+        this.dispatchEvent(
+          new CustomEvent<{ path: string }>('request-navigate', {
+            detail: { path: '/' },
+            bubbles: true,
+            composed: true,
+          }),
+        );
+      },
+      { signal },
+    );
   }
 
   /** Initialise le tableau comparatif et son sélecteur de service concurrent. */

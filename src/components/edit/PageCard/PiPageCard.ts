@@ -20,6 +20,27 @@ const KEY_TO_DIRECTION: Record<string, PageMoveDirection> = {
   ArrowDown: 'down',
 };
 
+/**
+ * Légère sur-résolution : le canvas CSS est affiché plus petit que le bitmap, le navigateur filtre mieux.
+ * Plafond pour limiter mémoire / temps WASM sur très grandes vignettes.
+ */
+const PREVIEW_OVERSAMPLE = 1.35;
+const PREVIEW_MAX_BITMAP_WIDTH = 4608;
+
+/** Largeur CSS utile pour le raster (zoom pinch inclus quand le navigateur l’expose). */
+function previewCssWidthPx(wrap: HTMLElement): number {
+  const r = wrap.getBoundingClientRect().width;
+  return r > 0 ? r : wrap.clientWidth;
+}
+
+function computePreviewScale(cssWidthPx: number, pixmapWidth: number): number {
+  const dpr = window.devicePixelRatio || 1;
+  const native = (cssWidthPx * dpr) / pixmapWidth;
+  const boosted = (cssWidthPx * dpr * PREVIEW_OVERSAMPLE) / pixmapWidth;
+  const maxByCap = PREVIEW_MAX_BITMAP_WIDTH / pixmapWidth;
+  return Math.max(native, Math.min(boosted, maxByCap));
+}
+
 export class PiPageCard extends HTMLElement {
   static get observedAttributes(): string[] {
     return ['page-index', 'file-name', 'display-order', 'original-page', 'total-pages'];
@@ -32,6 +53,8 @@ export class PiPageCard extends HTMLElement {
   private _layoutAttempts = 0;
   private _actionsBound = false;
   private _keyboardBound = false;
+  private _canvasResizeObserver: ResizeObserver | null = null;
+  private _resizeRedrawTimer: number | null = null;
 
   set doc(value: PdfDocument | null) {
     this._doc = value;
@@ -73,11 +96,13 @@ export class PiPageCard extends HTMLElement {
     this.bindKeyboard();
     this.applyTintVars();
     this.updateFooter();
+    this.setupCanvasResizeObserver();
     this.scheduleDraw();
   }
 
   disconnectedCallback(): void {
     this._abort.abort();
+    this.teardownCanvasResizeObserver();
   }
 
   attributeChangedCallback(name: string, _old: string | null, _next: string | null): void {
@@ -234,6 +259,39 @@ export class PiPageCard extends HTMLElement {
     return Number.isFinite(n) ? n : NaN;
   }
 
+  /**
+   * Quand la grille change de colonnes (ou la fenêtre est redimensionnée), `clientWidth` du wrap
+   * évolue : il faut re-rasteriser à une échelle adaptée, sinon le canvas CSS s’étire et floute.
+   */
+  private requestPreviewRedrawDebounced(): void {
+    if (this._resizeRedrawTimer !== null) window.clearTimeout(this._resizeRedrawTimer);
+    this._resizeRedrawTimer = window.setTimeout(() => {
+      this._resizeRedrawTimer = null;
+      this.scheduleDraw();
+    }, 120);
+  }
+
+  private setupCanvasResizeObserver(): void {
+    this.teardownCanvasResizeObserver();
+    const wrap = this.querySelector<HTMLElement>('[data-canvas-wrap]');
+    if (!wrap) return;
+    if (typeof ResizeObserver !== 'undefined') {
+      this._canvasResizeObserver = new ResizeObserver(() => {
+        this.requestPreviewRedrawDebounced();
+      });
+      this._canvasResizeObserver.observe(wrap);
+    }
+  }
+
+  private teardownCanvasResizeObserver(): void {
+    this._canvasResizeObserver?.disconnect();
+    this._canvasResizeObserver = null;
+    if (this._resizeRedrawTimer !== null) {
+      window.clearTimeout(this._resizeRedrawTimer);
+      this._resizeRedrawTimer = null;
+    }
+  }
+
   private scheduleDraw(): void {
     const token = ++this._drawToken;
     this._layoutAttempts = 0;
@@ -251,7 +309,7 @@ export class PiPageCard extends HTMLElement {
     const pageIndex = this.parsePageIndex();
     if (!wrap || !canvas || !doc || !Number.isFinite(pageIndex)) return;
 
-    const cssW = wrap.clientWidth;
+    const cssW = previewCssWidthPx(wrap);
     if (cssW <= 0 && this._layoutAttempts < 24) {
       this._layoutAttempts += 1;
       window.setTimeout(() => void this.tryDraw(token), 32);
@@ -278,7 +336,7 @@ export class PiPageCard extends HTMLElement {
     // pixmap dimensions are post-rotation: swap when /Rotate is 90 or 270.
     const swap = info.rotation % 180 !== 0;
     const pixmapWidth = Math.max(swap ? info.height : info.width, 1);
-    const scale = (cssW * window.devicePixelRatio) / pixmapWidth;
+    const scale = computePreviewScale(cssW, pixmapWidth);
 
     let bitmap: ImageBitmap | null = null;
     try {
@@ -290,14 +348,14 @@ export class PiPageCard extends HTMLElement {
       bitmap = rendered.bitmap;
       canvas.width = rendered.width;
       canvas.height = rendered.height;
-      canvas.style.width = '100%';
-      canvas.style.height = 'auto';
+      canvas.style.removeProperty('width');
+      canvas.style.removeProperty('height');
       const wrap = canvas.parentElement;
-      if (wrap) {
-        wrap.style.aspectRatio = `${rendered.width} / ${rendered.height}`;
-      }
+      wrap?.style.removeProperty('aspect-ratio');
       const ctx = canvas.getContext('2d');
       if (!ctx) return;
+      ctx.imageSmoothingEnabled = true;
+      ctx.imageSmoothingQuality = 'high';
       ctx.drawImage(bitmap, 0, 0);
     } catch (e) {
       if (!signal.aborted) {

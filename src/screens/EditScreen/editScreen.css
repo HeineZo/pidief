@@ -464,6 +464,7 @@ pi-edit-screen {
   display: grid;
   grid-template-columns: repeat(var(--pi-edit-grid-columns, 6), minmax(0, 1fr));
   gap: var(--space-1);
+  align-items: stretch;
   margin: 0 var(--space-12) var(--space-6);
 }
 
@@ -503,7 +504,18 @@ pi-edit-screen {
 .pi-edit__grid pi-page-card {
   cursor: grab;
   transition: transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 0.15s;
-  display: block;
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  transform-origin: 50% 50%;
+}
+
+.pi-edit__grid[data-dragging='true'],
+.pi-edit__grid[data-dragging='true'] pi-page-card {
+  touch-action: none;
 }
 
 .pi-edit__grid[data-dragging='true'] pi-page-card {
@@ -542,6 +554,17 @@ pi-edit-screen {
   font: inherit;
   cursor: pointer;
   transition: background 0.15s ease, border-color 0.15s ease;
+@media (prefers-reduced-motion: reduce) {
+  .pi-edit__grid pi-page-card[data-removing='true'],
+  .pi-edit__legend-item[data-removing='true'] {
+    transition: none;
+  }
+}
+
+pi-page-card[data-lifted='true'] .pi-page-card__shell {
+  transform: scale(1.04);
+  box-shadow: var(--shadow-lg);
+  transition: transform 0.12s ease-out, box-shadow 0.12s ease-out;
 }
 
 .pi-edit__empty-add-button:hover,
