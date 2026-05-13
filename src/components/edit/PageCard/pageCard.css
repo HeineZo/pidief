@@ -160,7 +160,6 @@ pi-page-card[data-dragging='true']:has(.pi-page-card__actions-frame:hover) .pi-p
   flex-direction: column;
   border-radius: var(--radius-sm);
   overflow: hidden;
-  /* Teinte fichier (pas le blanc carte) : bandes autour d’un aperçu pivoté alignées sur la palette Miel. */
   background: color-mix(
     in srgb,
     var(--pi-page-tint-bg, var(--color-bg-subtle)) 92%,
