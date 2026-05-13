@@ -1,3 +1,9 @@
+pi-page-card {
+  -webkit-touch-callout: none;
+  -webkit-user-select: none;
+  user-select: none;
+}
+
 .pi-page-card {
   position: relative;
   display: flex;
@@ -9,6 +15,7 @@
   background: var(--pi-page-tint-bg, var(--color-bg-subtle));
   user-select: none;
   -webkit-user-select: none;
+  -webkit-touch-callout: none;
 }
 
 pi-page-card[data-dragging='true'] {
@@ -153,6 +160,7 @@ pi-page-card[data-dragging='true']:has(.pi-page-card__actions-frame:hover) .pi-p
   max-height: 100%;
   width: auto;
   height: auto;
+  -webkit-touch-callout: none;
 }
 
 .pi-page-card__num {
