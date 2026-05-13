@@ -34,15 +34,26 @@ const escapeHtml = (s: string): string =>
 
 const MIN_GRID_COLUMNS = 3;
 const MAX_GRID_COLUMNS = 10;
-const DEFAULT_GRID_COLUMNS = 6;
+const MOBILE_DEFAULT_GRID_COLUMNS = 3;
+const DESKTOP_DEFAULT_GRID_COLUMNS = 6;
+const MOBILE_GRID_MEDIA_QUERY = '(max-width: 640px)';
 const DRAG_SLOT_SWITCH_HYSTERESIS_PX = 12;
 
+const LONG_PRESS_DELAY_MS = 350;
+const AUTO_SCROLL_EDGE_PX = 80;
+const AUTO_SCROLL_MAX_STEP_PX = 28;
+
 const activeFileCount = (pageFileIndex: number[]): number => new Set(pageFileIndex).size;
+
+const getDefaultGridColumns = (): number =>
+  window.matchMedia(MOBILE_GRID_MEDIA_QUERY).matches
+    ? MOBILE_DEFAULT_GRID_COLUMNS
+    : DESKTOP_DEFAULT_GRID_COLUMNS;
 
 export class EditScreen extends HTMLElement {
   private _docs: EditScreenFile[] | null = null;
   private bound = false;
-  private gridColumns = DEFAULT_GRID_COLUMNS;
+  private gridColumns = getDefaultGridColumns();
 
   private workingDoc: PdfDocument | null = null;
   private fileMetas: FileMeta[] = [];
@@ -68,7 +79,22 @@ export class EditScreen extends HTMLElement {
     pointerToCenterY: number;
     homes: { el: PiPageCard; cx: number; cy: number }[];
     moved: boolean;
+    scrollEl: HTMLElement | null;
+    scrollTopAtStart: number;
+    lastClientX: number;
+    lastClientY: number;
   } | null = null;
+
+  private pendingLongPress: {
+    card: PiPageCard;
+    pointerId: number;
+    lastClientX: number;
+    lastClientY: number;
+    timeoutId: number;
+    cleanup: (releasePointerCapture: boolean) => void;
+  } | null = null;
+
+  private autoScrollRafId: number | null = null;
 
   set docs(value: EditScreenFile[]) {
     this._docs = value;
@@ -89,6 +115,8 @@ export class EditScreen extends HTMLElement {
   }
 
   disconnectedCallback(): void {
+    this.cancelLongPress();
+    this.stopAutoScroll();
     this.workingDoc?.removeEventListener('change', this.onWorkingChange);
     this.scrollObserver?.disconnect();
     this.scrollObserver = null;
@@ -194,10 +222,11 @@ export class EditScreen extends HTMLElement {
 
     const grid = this.querySelector<HTMLElement>('[data-grid]');
     grid?.addEventListener('pointerdown', this.onGridPointerDown);
+    grid?.addEventListener('contextmenu', this.onGridContextMenu);
     const slider = this.querySelector<HTMLInputElement>('[data-grid-columns-slider]');
     const onSliderInput = (): void => {
       const next = Number.parseInt(slider?.value ?? '', 10);
-      this.applyGridColumns(Number.isFinite(next) ? next : DEFAULT_GRID_COLUMNS);
+      this.applyGridColumns(Number.isFinite(next) ? next : getDefaultGridColumns());
     };
     slider?.addEventListener('input', onSliderInput);
     grid?.addEventListener('pointerover', this.onGridPointerOver);
@@ -286,6 +315,14 @@ export class EditScreen extends HTMLElement {
     event.preventDefault();
     event.stopPropagation();
     void this.removeMergedFileAtIndex(idx);
+  };
+
+  /**
+   * Évite le menu contextuel au long-press (mobile / touch) sur les vignettes,
+   * qui coupe le geste de reorder.
+   */
+  private readonly onGridContextMenu = (event: Event): void => {
+    event.preventDefault();
   };
 
   private readonly onLegendScrollToFileClick = (event: MouseEvent): void => {
@@ -607,7 +644,7 @@ export class EditScreen extends HTMLElement {
   // --- Drag-and-drop reorder ---
 
   private readonly onGridPointerDown = (event: PointerEvent): void => {
-    if (event.button !== 0 || this.dragSession) return;
+    if (event.button !== 0 || this.dragSession || this.pendingLongPress) return;
     const target = event.target as HTMLElement | null;
     if (target?.closest('[data-action]')) return;
     const card = target?.closest<PiPageCard>('pi-page-card') ?? null;
@@ -617,8 +654,131 @@ export class EditScreen extends HTMLElement {
     const fromIdx = this.pageIds.indexOf(pid);
     if (fromIdx < 0) return;
 
+    if (event.pointerType === 'touch') {
+      this.armLongPress(event, card);
+      return;
+    }
+
+    const started = this.beginDragSession(card, event.pointerId, event.clientX, event.clientY);
+    if (started) event.preventDefault();
+  };
+
+  /**
+   * Long-press tactile : tant que le timer tourne, on capture le pointer et on
+   * bloque le scroll (pas d’annulation au moindre mouvement). Annulation seulement
+   * au relâchement / cancel ou si la liste défile autrement (autre doigt).
+   */
+  private armLongPress(event: PointerEvent, card: PiPageCard): void {
+    const pointerId = event.pointerId;
+    const scrollEl = this.querySelector<HTMLElement>('.pi-edit');
+
+    const moveOpts: AddEventListenerOptions = { passive: false };
+
+    const onMove = (ev: PointerEvent): void => {
+      if (ev.pointerId !== pointerId) return;
+      ev.preventDefault();
+      const pend = this.pendingLongPress;
+      if (pend?.pointerId === pointerId) {
+        pend.lastClientX = ev.clientX;
+        pend.lastClientY = ev.clientY;
+      }
+    };
+
+    const onEnd = (ev: PointerEvent): void => {
+      if (ev.pointerId !== pointerId) return;
+      this.cancelLongPress();
+    };
+
+    const onScroll = (): void => {
+      this.cancelLongPress();
+    };
+
+    const cleanup = (releasePointerCapture: boolean): void => {
+      card.removeEventListener('pointermove', onMove, moveOpts);
+      card.removeEventListener('pointerup', onEnd);
+      card.removeEventListener('pointercancel', onEnd);
+      scrollEl?.removeEventListener('scroll', onScroll);
+      delete card.dataset.longPressPending;
+      if (releasePointerCapture) {
+        try {
+          card.releasePointerCapture(pointerId);
+        } catch {
+          // déjà relâché
+        }
+      }
+    };
+
+    card.addEventListener('pointermove', onMove, moveOpts);
+    card.addEventListener('pointerup', onEnd);
+    card.addEventListener('pointercancel', onEnd);
+    scrollEl?.addEventListener('scroll', onScroll, { passive: true });
+
+    card.dataset.longPressPending = 'true';
+    try {
+      card.setPointerCapture(pointerId);
+    } catch {
+      // rare refus navigateur
+    }
+
+    const timeoutId = window.setTimeout(() => {
+      const pend = this.pendingLongPress;
+      if (!pend) return;
+      const { lastClientX, lastClientY } = pend;
+      pend.cleanup(false);
+      this.pendingLongPress = null;
+      try {
+        navigator.vibrate?.(15);
+      } catch {
+        // certains navigateurs refusent vibrate sans geste utilisateur explicite
+      }
+      card.dataset.lifted = 'true';
+      const started = this.beginDragSession(card, pointerId, lastClientX, lastClientY);
+      if (!started) {
+        delete card.dataset.lifted;
+        try {
+          card.releasePointerCapture(pointerId);
+        } catch {
+          // ignore
+        }
+      }
+    }, LONG_PRESS_DELAY_MS);
+
+    this.pendingLongPress = {
+      card,
+      pointerId,
+      lastClientX: event.clientX,
+      lastClientY: event.clientY,
+      timeoutId,
+      cleanup,
+    };
+  }
+
+  private cancelLongPress(): void {
+    const pending = this.pendingLongPress;
+    if (!pending) return;
+    window.clearTimeout(pending.timeoutId);
+    pending.cleanup(true);
+    this.pendingLongPress = null;
+  }
+
+  /**
+   * Démarre une session de drag : capture le pointer, snapshot les positions
+   * "home" des cartes et active les listeners pointermove/pointerup.
+   * Retourne `false` si la grille n'est pas prête ou si la carte n'a pas de slot.
+   */
+  private beginDragSession(
+    card: PiPageCard,
+    pointerId: number,
+    clientX: number,
+    clientY: number,
+  ): boolean {
+    const pid = card.dataset.pageId;
+    if (!pid) return false;
+    const fromIdx = this.pageIds.indexOf(pid);
+    if (fromIdx < 0) return false;
+
     const grid = this.querySelector<HTMLElement>('[data-grid]');
-    if (!grid) return;
+    if (!grid) return false;
 
     const cards = Array.from(grid.querySelectorAll<PiPageCard>('pi-page-card'));
     const homes = cards.map((el) => {
@@ -626,44 +786,71 @@ export class EditScreen extends HTMLElement {
       return { el, cx: r.left + r.width / 2, cy: r.top + r.height / 2 };
     });
     const cardHome = homes[fromIdx];
-    if (!cardHome) return;
+    if (!cardHome) return false;
+
+    const scrollEl = this.querySelector<HTMLElement>('.pi-edit');
 
     this.dragSession = {
       cardEl: card,
-      pointerId: event.pointerId,
+      pointerId,
       fromIdx,
       liveIdx: fromIdx,
-      startX: event.clientX,
-      startY: event.clientY,
-      pointerToCenterX: event.clientX - cardHome.cx,
-      pointerToCenterY: event.clientY - cardHome.cy,
+      startX: clientX,
+      startY: clientY,
+      pointerToCenterX: clientX - cardHome.cx,
+      pointerToCenterY: clientY - cardHome.cy,
       homes,
       moved: false,
+      scrollEl,
+      scrollTopAtStart: scrollEl?.scrollTop ?? 0,
+      lastClientX: clientX,
+      lastClientY: clientY,
     };
 
     this.clearFaded();
     grid.dataset.dragging = 'true';
     card.dataset.dragging = 'true';
-    card.setPointerCapture(event.pointerId);
+    try {
+      card.setPointerCapture(pointerId);
+    } catch {
+      // le pointer peut ne plus être actif (rare race condition)
+    }
     card.addEventListener('pointermove', this.onPointerMove);
     card.addEventListener('pointerup', this.onPointerUp);
     card.addEventListener('pointercancel', this.onPointerUp);
-    event.preventDefault();
-  };
+    card.addEventListener('lostpointercapture', this.onLostPointerCapture);
+    return true;
+  }
 
   private readonly onPointerMove = (event: PointerEvent): void => {
     const sess = this.dragSession;
     if (!sess || event.pointerId !== sess.pointerId) return;
     sess.moved = true;
+    sess.lastClientX = event.clientX;
+    sess.lastClientY = event.clientY;
+    this.updateDragVisuals();
+    this.maybeAutoScroll(event.clientY);
+  };
 
-    const dx = event.clientX - sess.startX;
-    const dy = event.clientY - sess.startY;
+  /**
+   * Recalcule la position visuelle de la carte traînée et la cible de slot la
+   * plus proche, en compensant le scroll vertical du conteneur via
+   * `scrollDelta` (les `homes` restent ceux capturés au début).
+   */
+  private updateDragVisuals(): void {
+    const sess = this.dragSession;
+    if (!sess) return;
+
+    const scrollDelta = sess.scrollEl ? sess.scrollEl.scrollTop - sess.scrollTopAtStart : 0;
+    const dx = sess.lastClientX - sess.startX;
+    const dy = sess.lastClientY - sess.startY + scrollDelta;
     sess.cardEl.style.transform = `translate(${dx}px, ${dy}px)`;
 
     const cur = {
-      x: event.clientX - sess.pointerToCenterX,
-      y: event.clientY - sess.pointerToCenterY,
+      x: sess.lastClientX - sess.pointerToCenterX,
+      y: sess.lastClientY - sess.pointerToCenterY + scrollDelta,
     };
+
     let nearest = 0;
     let best = Infinity;
     for (let i = 0; i < sess.homes.length; i++) {
@@ -695,20 +882,81 @@ export class EditScreen extends HTMLElement {
         home.el.style.transform = `translate(${ddx}px, ${ddy}px)`;
       }
     }
-  };
+  }
+
+  private maybeAutoScroll(clientY: number): void {
+    const sess = this.dragSession;
+    if (!sess?.scrollEl) return;
+    const rect = sess.scrollEl.getBoundingClientRect();
+    const inTop = clientY < rect.top + AUTO_SCROLL_EDGE_PX;
+    const inBottom = clientY > rect.bottom - AUTO_SCROLL_EDGE_PX;
+    if (inTop || inBottom) {
+      this.startAutoScroll();
+    } else {
+      this.stopAutoScroll();
+    }
+  }
+
+  private startAutoScroll(): void {
+    if (this.autoScrollRafId !== null) return;
+    const tick = (): void => {
+      this.autoScrollRafId = null;
+      const sess = this.dragSession;
+      if (!sess?.scrollEl) return;
+
+      const rect = sess.scrollEl.getBoundingClientRect();
+      const y = sess.lastClientY;
+      let step = 0;
+      if (y < rect.top + AUTO_SCROLL_EDGE_PX) {
+        const ratio = Math.min(1, (rect.top + AUTO_SCROLL_EDGE_PX - y) / AUTO_SCROLL_EDGE_PX);
+        step = -Math.ceil(ratio * AUTO_SCROLL_MAX_STEP_PX);
+      } else if (y > rect.bottom - AUTO_SCROLL_EDGE_PX) {
+        const ratio = Math.min(1, (y - (rect.bottom - AUTO_SCROLL_EDGE_PX)) / AUTO_SCROLL_EDGE_PX);
+        step = Math.ceil(ratio * AUTO_SCROLL_MAX_STEP_PX);
+      }
+      if (step === 0) return;
+
+      const before = sess.scrollEl.scrollTop;
+      sess.scrollEl.scrollTop += step;
+      if (sess.scrollEl.scrollTop !== before) {
+        this.updateDragVisuals();
+      }
+      this.autoScrollRafId = requestAnimationFrame(tick);
+    };
+    this.autoScrollRafId = requestAnimationFrame(tick);
+  }
+
+  private stopAutoScroll(): void {
+    if (this.autoScrollRafId !== null) {
+      cancelAnimationFrame(this.autoScrollRafId);
+      this.autoScrollRafId = null;
+    }
+  }
 
   /**
    * Fin de drag : si la page a bougé, réordonne les tableaux locaux + `reconcile()` avec une
    * animation FLIP (`applyFlipFromRects`), puis appelle `PdfDocument.movePage` (insertion, pas swap).
    */
   private readonly onPointerUp = (event: PointerEvent): void => {
+    this.finalizePageReorderDrag(event);
+  };
+
+  private readonly onLostPointerCapture = (event: PointerEvent): void => {
+    this.finalizePageReorderDrag(event);
+  };
+
+  private finalizePageReorderDrag(event: PointerEvent): void {
     const sess = this.dragSession;
     if (!sess || event.pointerId !== sess.pointerId) return;
+
+    this.stopAutoScroll();
+    delete sess.cardEl.dataset.lifted;
 
     const grid = this.querySelector<HTMLElement>('[data-grid]');
     sess.cardEl.removeEventListener('pointermove', this.onPointerMove);
     sess.cardEl.removeEventListener('pointerup', this.onPointerUp);
     sess.cardEl.removeEventListener('pointercancel', this.onPointerUp);
+    sess.cardEl.removeEventListener('lostpointercapture', this.onLostPointerCapture);
     try {
       sess.cardEl.releasePointerCapture(sess.pointerId);
     } catch {
