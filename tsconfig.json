@@ -19,7 +19,9 @@
       "@screens/*": ["./src/screens/*"],
       "@styles/*": ["./src/styles/*"],
       "@util/*": ["./src/core/util/*"],
-      "@core/pdf/*": ["./src/core/pdf/*"]
+      "@core/pdf/*": ["./src/core/pdf/*"],
+      "@i18n": ["./src/core/i18n/index.ts"],
+      "@i18n/*": ["./src/core/i18n/*"]
     },
 
     /* Linting */

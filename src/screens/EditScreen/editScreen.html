@@ -1,23 +1,21 @@
 <section class="pi-edit" aria-labelledby="edit-screen-title">
   <div class="pi-edit__top-sentinel" data-scroll-sentinel aria-hidden="true"></div>
-  <a class="pi-edit__skip-link" href="#edit-grid" data-action="skip-to-first-legend-file">Passer au contenu principal d'édition</a>
-  <h1 id="edit-screen-title" class="sr-only">Édition du PDF</h1>
+  <a class="pi-edit__skip-link" href="#edit-grid" data-action="skip-to-first-legend-file" data-i18n="edit.skipLink"></a>
+  <h1 id="edit-screen-title" class="sr-only" data-i18n="edit.title"></h1>
   <header class="pi-edit__head">
     <div class="pi-edit__toolbar">
-      <pi-button variant="ghost" icon="arrow-left" data-action="back">Retour</pi-button>
+      <pi-button variant="ghost" icon="arrow-left" data-action="back" data-i18n="edit.back"></pi-button>
       <span class="pi-edit__toolbar-spacer"></span>
       <span class="pi-edit__pdf-limit" id="edit-pdf-limit-hint" data-pdf-limit-hint></span>
       <div class="pi-edit__toolbar-buttons">
-        <pi-button variant="ghost" icon="plus" data-action="add-pdf" aria-describedby="edit-pdf-limit-hint">
-          Ajouter un PDF
-        </pi-button>
-        <pi-button variant="primary" icon="download" data-action="continue">Exporter</pi-button>
+        <pi-button variant="ghost" icon="plus" data-action="add-pdf" aria-describedby="edit-pdf-limit-hint" data-i18n="edit.addPdf"></pi-button>
+        <pi-button variant="primary" icon="download" data-action="continue" data-i18n="edit.export"></pi-button>
       </div>
     </div>
     <div class="pi-edit__legend-row">
-      <ul class="pi-edit__legend" data-legend aria-label="Fichiers PDF du projet"></ul>
+      <ul class="pi-edit__legend" data-legend data-i18n-attr="aria-label:edit.legendAriaLabel"></ul>
       <div class="pi-edit__grid-controls" role="group" aria-labelledby="grid-columns-label">
-        <span id="grid-columns-label" class="sr-only">Densité de la grille</span>
+        <span id="grid-columns-label" class="sr-only" data-i18n="edit.gridDensityLabel"></span>
         <div class="pi-edit__grid-slider-wrap">
           <pi-icon name="grid-small" size="18" stroke="1.5" aria-hidden="true"></pi-icon>
           <input
@@ -28,7 +26,7 @@
             max="10"
             step="1"
             value="3"
-            aria-label="Densité de la grille"
+            data-i18n-attr="aria-label:edit.gridDensityLabel"
             aria-describedby="grid-columns-value"
             data-grid-columns-slider
           />
@@ -39,8 +37,7 @@
             for="grid-columns-range"
             aria-live="polite"
             data-grid-columns-value
-            >3 colonnes</output
-          >
+          ></output>
         </div>
       </div>
     </div>
@@ -50,13 +47,11 @@
     class="pi-edit__grid"
     data-grid
     role="list"
-    aria-label="Pages PDF, naviguez avec Tab et déplacez avec les flèches"
+    data-i18n-attr="aria-label:edit.gridAriaLabel"
   ></div>
   <div class="pi-edit__empty" data-empty hidden>
-    <p>Aucune page restante. Ajoutez un PDF pour continuer.</p>
-    <button type="button" class="pi-edit__empty-add-button" data-action="add-pdf">
-      Ajouter un PDF
-    </button>
+    <p data-i18n="edit.emptyMessage"></p>
+    <button type="button" class="pi-edit__empty-add-button" data-action="add-pdf" data-i18n="edit.addPdf"></button>
   </div>
   <div class="sr-only" aria-live="polite" aria-atomic="true" data-move-announcer></div>
   <input type="file" accept="application/pdf" multiple hidden data-add-input />

@@ -13,6 +13,7 @@ import {
 } from '@util/GetPasteShortcutLabel';
 import { scrollToBottom } from '@util/scrollToBottom';
 import { PdfEngine } from '@core/pdf/PdfEngine';
+import { applyTranslations, subscribe, t } from '@i18n';
 
 interface UploadFile {
   id: string;
@@ -25,6 +26,7 @@ const newId = (): string =>
 export class UploadScreen extends HTMLElement {
   private files: UploadFile[] = [];
   private pasteHoverTimeoutId: number | null = null;
+  private unsubscribeLang: (() => void) | null = null;
 
   private onWindowPaste = (event: ClipboardEvent): void => {
     void this.handlePasteEvent(event);
@@ -42,12 +44,19 @@ export class UploadScreen extends HTMLElement {
     this.render();
     window.addEventListener('paste', this.onWindowPaste);
     window.addEventListener('keydown', this.onWindowKeyDown);
+    this.unsubscribeLang = subscribe(() => {
+      applyTranslations(this);
+      this.refreshPasteButtonLabel();
+      this.refreshFilesRegion();
+    });
     PdfEngine.shared().warmup();
   }
 
   disconnectedCallback(): void {
     window.removeEventListener('paste', this.onWindowPaste);
     window.removeEventListener('keydown', this.onWindowKeyDown);
+    this.unsubscribeLang?.();
+    this.unsubscribeLang = null;
     if (this.pasteHoverTimeoutId !== null) {
       window.clearTimeout(this.pasteHoverTimeoutId);
       this.pasteHoverTimeoutId = null;
@@ -56,6 +65,7 @@ export class UploadScreen extends HTMLElement {
 
   private render(): void {
     this.innerHTML = template;
+    applyTranslations(this);
 
     this.bindEvents();
     this.refreshPasteButtonLabel();
@@ -114,11 +124,14 @@ export class UploadScreen extends HTMLElement {
     const button = pasteHost.querySelector<HTMLButtonElement>('button.pi-button');
     const labelSpan = button?.querySelector<HTMLSpanElement>('span');
     if (labelSpan) {
-      labelSpan.textContent = `Coller ${getPasteShortcutLabel()}`;
+      labelSpan.textContent = t('upload.pasteWithShortcut', {
+        shortcut: getPasteShortcutLabel(),
+      });
+      labelSpan.removeAttribute('data-i18n');
     }
     button?.setAttribute(
       'aria-label',
-      `Coller (raccourci ${getPasteShortcutAccessibleLabel()})`,
+      t('upload.pasteAriaLabel', { shortcut: getPasteShortcutAccessibleLabel() }),
     );
   }
 
@@ -149,9 +162,7 @@ export class UploadScreen extends HTMLElement {
 
     const remaining = MAX_UPLOAD_PDFS - this.files.length;
     if (remaining <= 0) {
-      sendWarning(
-        `Limite de ${MAX_UPLOAD_PDFS} fichiers PDF atteinte. Retirez des fichiers pour en ajouter d'autres.`,
-      );
+      sendWarning(t('upload.limitReached', { max: MAX_UPLOAD_PDFS }));
       return;
     }
 
@@ -163,9 +174,7 @@ export class UploadScreen extends HTMLElement {
 
     if (skipped > 0) {
       sendWarning(
-        skipped === 1
-          ? `Un fichier n'a pas été ajouté : limite de ${MAX_UPLOAD_PDFS} PDF.`
-          : `${skipped} fichiers n'ont pas été ajoutés : limite de ${MAX_UPLOAD_PDFS} PDF.`,
+        t('upload.skippedFiles', { count: skipped, max: MAX_UPLOAD_PDFS }),
       );
     }
 
@@ -209,7 +218,7 @@ export class UploadScreen extends HTMLElement {
 
     const pdfFiles = this.getPdfFilesFromDataTransfer(event.clipboardData);
     if (pdfFiles.length === 0) {
-      sendError('Aucun PDF dans le presse-papier');
+      sendError(t('upload.clipboardEmpty'));
       return;
     }
 
@@ -221,16 +230,12 @@ export class UploadScreen extends HTMLElement {
     const pasteShortcut = getPasteShortcutLabel();
 
     if (!('clipboard' in navigator)) {
-      sendError(
-        `Votre navigateur ne permet pas de lire le presse-papier ici. Utilisez plutôt ${pasteShortcut}`,
-      );
+      sendError(t('upload.clipboardUnsupported', { shortcut: pasteShortcut }));
       return;
     }
 
     if (!('read' in navigator.clipboard)) {
-      sendError(
-        `Cliquez dans la page puis utilisez ${pasteShortcut} pour coller un PDF`,
-      );
+      sendError(t('upload.clipboardClickAndPaste', { shortcut: pasteShortcut }));
       return;
     }
 
@@ -238,9 +243,7 @@ export class UploadScreen extends HTMLElement {
     try {
       items = await navigator.clipboard.read();
     } catch {
-      sendError(
-        `Impossible d'accéder au presse-papier. Cliquez dans la page puis utilisez ${pasteShortcut} (acceptez la permission si le navigateur la demande)`,
-      );
+      sendError(t('upload.clipboardAccessDenied', { shortcut: pasteShortcut }));
       return;
     }
 
@@ -254,7 +257,7 @@ export class UploadScreen extends HTMLElement {
     }
 
     if (pdfFiles.length === 0) {
-      sendError('Aucun PDF dans le presse-papier');
+      sendError(t('upload.clipboardEmpty'));
       return;
     }
 
@@ -276,8 +279,7 @@ export class UploadScreen extends HTMLElement {
 
     const hasFiles = this.files.length > 0;
     const n = this.files.length;
-    const plural = n > 1 ? 's' : '';
-    count.textContent = `${n} / ${MAX_UPLOAD_PDFS} fichier${plural} PDF ajouté${plural}`;
+    count.textContent = t('upload.fileCount', { count: n, max: MAX_UPLOAD_PDFS });
     count.hidden = !hasFiles;
     clearButton.hidden = !hasFiles;
     continueCta.hidden = !hasFiles;

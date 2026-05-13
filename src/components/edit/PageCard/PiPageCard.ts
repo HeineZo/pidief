@@ -3,6 +3,7 @@ import type { PdfDocument } from '@core/pdf/PdfDocument';
 import template from './pageCard.html?raw';
 import './pageCard.css';
 import type { PageTint } from './palette';
+import { applyTranslations, subscribe, t } from '@i18n';
 
 export type PageCardAction = 'rotate' | 'delete';
 /** Direction émise par `page-move` pour le swap clavier dans la grille d’édition. */
@@ -55,6 +56,7 @@ export class PiPageCard extends HTMLElement {
   private _keyboardBound = false;
   private _canvasResizeObserver: ResizeObserver | null = null;
   private _resizeRedrawTimer: number | null = null;
+  private _unsubscribeLang: (() => void) | null = null;
 
   set doc(value: PdfDocument | null) {
     this._doc = value;
@@ -87,23 +89,29 @@ export class PiPageCard extends HTMLElement {
     this._abort = new AbortController();
     if (!this.querySelector('.pi-page-card')) {
       this.innerHTML = template;
+      applyTranslations(this);
     }
     if (!this.hasAttribute('tabindex')) this.setAttribute('tabindex', '0');
     if (!this.hasAttribute('role')) this.setAttribute('role', 'listitem');
-    if (!this.hasAttribute('aria-roledescription')) {
-      this.setAttribute('aria-roledescription', 'Page déplaçable');
-    }
+    this.setAttribute('aria-roledescription', t('pageCard.roleDescription'));
     this.bindActions();
     this.bindKeyboard();
     this.applyTintVars();
     this.updateFooter();
     this.setupCanvasResizeObserver();
     this.scheduleDraw();
+    this._unsubscribeLang = subscribe(() => {
+      applyTranslations(this);
+      this.setAttribute('aria-roledescription', t('pageCard.roleDescription'));
+      this.updateFooter();
+    });
   }
 
   disconnectedCallback(): void {
     this._abort.abort();
     this.teardownCanvasResizeObserver();
+    this._unsubscribeLang?.();
+    this._unsubscribeLang = null;
   }
 
   attributeChangedCallback(name: string, _old: string | null, _next: string | null): void {
@@ -206,15 +214,23 @@ export class PiPageCard extends HTMLElement {
     const originalRaw = this.getAttribute('original-page');
     const originalNum = originalRaw !== null ? Number.parseInt(originalRaw, 10) : NaN;
     const pageLabel =
-      Number.isFinite(originalNum) && originalNum > 0 ? `Page ${originalNum}` : '';
+      Number.isFinite(originalNum) && originalNum > 0
+        ? t('pageCard.pageLabel', { n: originalNum })
+        : '';
     if (label) {
       label.textContent = pageLabel;
     }
     const cleanName = name.replace(/\.pdf$/i, '');
     if (titleBar) {
       if (pageLabel && cleanName) {
-        titleBar.setAttribute('aria-label', `${pageLabel} de ${cleanName}`);
-        titleBar.setAttribute('title', `${pageLabel} — ${cleanName}`);
+        titleBar.setAttribute(
+          'aria-label',
+          t('pageCard.pageOfAria', { pageLabel, name: cleanName }),
+        );
+        titleBar.setAttribute(
+          'title',
+          t('pageCard.pageOfTitle', { pageLabel, name: cleanName }),
+        );
       } else {
         titleBar.removeAttribute('aria-label');
         titleBar.removeAttribute('title');
@@ -239,18 +255,22 @@ export class PiPageCard extends HTMLElement {
     const total = totalRaw !== null ? Number.parseInt(totalRaw, 10) : NaN;
     const parts: string[] = [];
     if (pageLabel) {
-      parts.push(cleanName ? `${pageLabel} de ${cleanName}` : pageLabel);
+      parts.push(
+        cleanName
+          ? t('pageCard.pageOfAria', { pageLabel, name: cleanName })
+          : pageLabel,
+      );
     } else if (cleanName) {
       parts.push(cleanName);
     }
     if (Number.isFinite(displayOrder) && displayOrder > 0) {
       if (Number.isFinite(total) && total > 0) {
-        parts.push(`position ${displayOrder} sur ${total}`);
+        parts.push(t('pageCard.positionOf', { n: displayOrder, total }));
       } else {
-        parts.push(`position ${displayOrder}`);
+        parts.push(t('pageCard.positionOnly', { n: displayOrder }));
       }
     }
-    parts.push('Utilisez les flèches pour déplacer.');
+    parts.push(t('pageCard.arrowsHint'));
     this.setAttribute('aria-label', parts.join(', '));
   }
 

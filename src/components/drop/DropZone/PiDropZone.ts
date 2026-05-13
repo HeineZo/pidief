@@ -10,6 +10,7 @@
  */
 
 import { MAX_UPLOAD_PDFS } from '@util/uploadPdfLimits';
+import { applyTranslations, subscribe, t } from '@i18n';
 import html from './dropzone.html?raw';
 import css from './dropzone.css?raw';
 
@@ -20,6 +21,7 @@ export class PiDropZone extends HTMLElement {
   private zone: HTMLDivElement | null = null;
   private actions: HTMLDivElement | null = null;
   private input: HTMLInputElement | null = null;
+  private unsubscribeLang: (() => void) | null = null;
 
   constructor() {
     super();
@@ -38,8 +40,7 @@ export class PiDropZone extends HTMLElement {
 
     if (!this.wrap || !this.input) return;
 
-    const maxFilesEl = root.querySelector<HTMLSpanElement>('.max-files');
-    if (maxFilesEl) maxFilesEl.textContent = String(MAX_UPLOAD_PDFS);
+    this.refreshTranslations();
 
     const accept = this.getAttribute('accept');
     if (accept) this.input.accept = accept;
@@ -50,6 +51,8 @@ export class PiDropZone extends HTMLElement {
     this.wrap.addEventListener('click', this.onWrapClick);
     this.zone?.addEventListener('keydown', this.onZoneKeyDown);
     this.input.addEventListener('change', this.onInputChange);
+
+    this.unsubscribeLang = subscribe(() => this.refreshTranslations());
   }
 
   disconnectedCallback(): void {
@@ -59,6 +62,18 @@ export class PiDropZone extends HTMLElement {
     this.wrap?.removeEventListener('click', this.onWrapClick);
     this.zone?.removeEventListener('keydown', this.onZoneKeyDown);
     this.input?.removeEventListener('change', this.onInputChange);
+    this.unsubscribeLang?.();
+    this.unsubscribeLang = null;
+  }
+
+  private refreshTranslations(): void {
+    const root = this.shadowRoot;
+    if (!root) return;
+    applyTranslations(root);
+    const formatsEl = root.querySelector<HTMLElement>('[data-formats]');
+    if (formatsEl) {
+      formatsEl.textContent = t('dropzone.formats', { max: MAX_UPLOAD_PDFS });
+    }
   }
 
   /**

@@ -1,4 +1,5 @@
 import '@components/base/Icon/PiIcon';
+import { t } from '@i18n';
 import './button.css';
 
 export type ButtonVariant = 'primary' | 'accent' | 'ghost';
@@ -10,6 +11,10 @@ const isVariant = (value: string | null): value is ButtonVariant =>
 
 /**
  * `<pi-button variant="primary" icon="upload">Parcourir</pi-button>`
+ *
+ * Accepte aussi `data-i18n="key"` / `data-i18n-html="key"` sur l'hôte : la clé
+ * est déplacée sur le `<span>` interne pour que `applyTranslations()` puisse
+ * remettre à jour le libellé sur `lang-changed` sans reconstruire le bouton.
  */
 export class PiButton extends HTMLElement {
   private button: HTMLButtonElement | null = null;
@@ -21,6 +26,8 @@ export class PiButton extends HTMLElement {
   connectedCallback(): void {
     if (this.button) return;
     const labelHTML = this.innerHTML.trim();
+    const i18nKey = this.getAttribute('data-i18n');
+    const i18nHtmlKey = this.getAttribute('data-i18n-html');
     this.innerHTML = '';
 
     const button = document.createElement('button');
@@ -36,9 +43,19 @@ export class PiButton extends HTMLElement {
       button.appendChild(iconEl);
     }
 
-    if (labelHTML) {
+    if (i18nKey || i18nHtmlKey || labelHTML) {
       const label = document.createElement('span');
-      label.innerHTML = labelHTML;
+      if (i18nKey) {
+        label.setAttribute('data-i18n', i18nKey);
+        label.textContent = t(i18nKey);
+        this.removeAttribute('data-i18n');
+      } else if (i18nHtmlKey) {
+        label.setAttribute('data-i18n-html', i18nHtmlKey);
+        label.innerHTML = t(i18nHtmlKey);
+        this.removeAttribute('data-i18n-html');
+      } else {
+        label.innerHTML = labelHTML;
+      }
       button.appendChild(label);
     }
 
