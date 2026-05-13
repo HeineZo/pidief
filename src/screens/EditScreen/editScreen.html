@@ -1,5 +1,6 @@
 <section class="pi-edit">
   <div class="pi-edit__top-sentinel" data-scroll-sentinel aria-hidden="true"></div>
+  <a class="pi-edit__skip-link" href="#edit-first-legend-file-name" data-action="skip-to-first-legend-file">Passer au contenu principal d'édition</a>
   <header class="pi-edit__head">
     <div class="pi-edit__toolbar">
       <pi-button variant="ghost" icon="arrow-left" data-action="back">Retour</pi-button>
@@ -41,9 +42,14 @@
       </div>
     </div>
   </header>
-  <div class="pi-edit__grid" data-grid></div>
+  <div
+    class="pi-edit__grid"
+    data-grid
+    aria-label="Pages PDF, naviguez avec Tab et déplacez avec les flèches"
+  ></div>
   <div class="pi-edit__empty" data-empty hidden>
     <p>Aucune page restante. Ajoutez un PDF pour continuer.</p>
   </div>
+  <div class="sr-only" aria-live="polite" aria-atomic="true" data-move-announcer></div>
   <input type="file" accept="application/pdf" multiple hidden data-add-input />
 </section>

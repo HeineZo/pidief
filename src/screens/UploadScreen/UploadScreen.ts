@@ -162,7 +162,8 @@ export class UploadScreen extends HTMLElement {
     }
 
     if (shouldScroll) {
-      scrollToBottom();
+      const uploadSection = this.querySelector<HTMLElement>('.pi-upload');
+      scrollToBottom(uploadSection);
     }
   }
 

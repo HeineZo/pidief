@@ -6,6 +6,7 @@ pi-edit-screen {
 }
 
 .pi-edit {
+  position: relative;
   flex: 1;
   display: flex;
   flex-direction: column;
@@ -13,6 +14,33 @@ pi-edit-screen {
   overflow-y: auto;
   overflow-x: hidden;
   touch-action: pan-y;
+}
+
+.pi-edit__skip-link {
+  position: absolute;
+  top: var(--space-4);
+  left: var(--space-4);
+  z-index: 10;
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  text-decoration: none;
+  transform: translateY(-120%);
+  opacity: 0;
+  pointer-events: none;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+.pi-edit__skip-link:focus-visible,
+.pi-edit__skip-link:focus {
+  transform: translateY(0);
+  opacity: 1;
+  pointer-events: auto;
 }
 
 .pi-edit__top-sentinel {
@@ -78,7 +106,7 @@ pi-edit-screen {
 }
 
 .pi-edit__title {
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-size: var(--text-3xl);
   font-style: italic;
   font-weight: 400;

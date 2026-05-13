@@ -1,10 +1,20 @@
+pi-upload-screen {
+  display: flex;
+  flex: 1;
+  min-height: 0;
+}
+
 .pi-upload {
   flex: 1;
+  width: 100%;
+  min-height: 0;
+  min-width: 0;
+  overflow-y: auto;
   display: flex;
   flex-direction: column;
   align-items: center;
-  justify-content: center;
-  padding: 0 var(--space-12) var(--space-12);
+  justify-content: flex-start;
+  padding: var(--space-4) var(--space-12) var(--space-12);
   gap: var(--space-8);
 }
 
@@ -30,7 +40,7 @@
 
 .pi-upload__title {
   font-family: var(--font-sans);
-  font-size: var(--text-5xl);
+  font-size: clamp(var(--text-4xl), 8vw, var(--text-5xl));
   font-style: normal;
   font-weight: 500;
   line-height: var(--leading-snug);
@@ -38,6 +48,7 @@
   text-align: center;
   margin: 0;
   color: var(--color-text);
+  max-width: 100%;
 }
 
 .pi-upload__title-lead {
@@ -53,8 +64,23 @@
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
+  max-width: 100%;
   column-gap: 0.22em;
   row-gap: 0.06em;
+}
+
+.pi-upload__title-core {
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  gap: 0.22em;
+}
+
+.pi-upload__title-tail {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.22em;
 }
 
 .pi-upload__badge {
@@ -100,6 +126,7 @@ button.pi-upload__badge:focus-visible {
 .pi-upload__title-privacy {
   color: var(--color-accent);
   font-style: normal;
+  min-width: 0;
 }
 
 .pi-upload__sub {
@@ -128,12 +155,14 @@ button.pi-upload__badge:focus-visible {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: var(--space-3);
 }
 
 .pi-upload__files-count {
   font-size: 13px;
   font-weight: 500;
   color: var(--color-muted);
+  min-width: 0;
 }
 
 .pi-upload__files-clear {
@@ -157,6 +186,7 @@ button.pi-upload__badge:focus-visible {
   display: flex;
   flex-wrap: wrap;
   gap: var(--space-2);
+  min-width: 0;
 }
 
 .pi-upload__cta {
@@ -182,5 +212,95 @@ pi-button[data-action='paste'] .pi-button.is-kbd-hover:not(:disabled) {
   }
   100% {
     transform: translateY(0) scale(1);
+  }
+}
+
+@media (max-width: 640px) {
+  .pi-upload {
+    justify-content: flex-start;
+    padding: var(--space-4) var(--space-5) var(--space-10);
+    gap: var(--space-6);
+  }
+
+  .pi-upload__title {
+    font-size: clamp(34px, 10vw, 48px);
+    line-height: 1.08;
+    letter-spacing: -0.045em;
+  }
+
+  .pi-upload__title-row {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    column-gap: 0;
+    row-gap: 0;
+  }
+
+  .pi-upload__title-core {
+    max-width: 100%;
+    gap: 0.18em;
+  }
+
+  .pi-upload__title-privacy {
+    font-size: 0.82em;
+    letter-spacing: -0.055em;
+    line-height: 1;
+    overflow-wrap: anywhere;
+  }
+
+  .pi-upload__title-tail {
+    gap: 0.2em;
+    line-height: 1;
+  }
+
+  .pi-upload__badge {
+    width: 0.86em;
+    height: 0.86em;
+  }
+
+  .pi-upload__sub {
+    font-size: var(--text-md);
+    max-width: 34ch;
+  }
+
+  .pi-upload__files {
+    max-width: 100%;
+  }
+
+  .pi-upload__files-header {
+    align-items: flex-start;
+  }
+
+  .pi-upload__files-clear {
+    flex-shrink: 0;
+  }
+
+  .pi-upload__chips {
+    display: grid;
+    grid-template-columns: 1fr;
+  }
+
+  .pi-upload__cta {
+    justify-content: stretch;
+  }
+
+  .pi-upload__cta pi-button {
+    width: 100%;
+  }
+
+  .pi-upload__cta .pi-button {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+@media (max-width: 360px) {
+  .pi-upload {
+    padding-inline: var(--space-4);
+  }
+
+  .pi-upload__title {
+    font-size: clamp(30px, 10vw, 36px);
   }
 }

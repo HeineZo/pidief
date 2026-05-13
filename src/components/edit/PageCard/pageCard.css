@@ -18,6 +18,16 @@ pi-page-card {
   -webkit-touch-callout: none;
 }
 
+pi-page-card {
+  outline: none;
+}
+
+pi-page-card:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 3px;
+  border-radius: var(--radius-md);
+}
+
 pi-page-card[data-dragging='true'] {
   z-index: 5;
   cursor: grabbing;
