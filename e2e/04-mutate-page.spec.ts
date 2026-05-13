@@ -17,8 +17,9 @@ test('mutation : supprimer une page diminue le nombre de cartes', async ({ page 
   await waitForFirstPageRendered(page);
 
   const firstCard = cards.first();
-  await firstCard.hover();
-  await firstCard.locator('[data-action="delete"]').click({ force: true });
+  await firstCard
+    .locator('[data-action="delete"]')
+    .evaluate((el) => (el as HTMLButtonElement).click());
 
   await expect(cards).toHaveCount(1);
 });
