@@ -30,6 +30,16 @@ export class PiNav extends HTMLElement {
     return isLang(raw) ? raw : 'FR';
   }
 
+  private navigate(path: string): void {
+    this.dispatchEvent(
+      new CustomEvent<{ path: string }>('request-navigate', {
+        detail: { path },
+        bubbles: true,
+        composed: true,
+      }),
+    );
+  }
+
   private render(): void {
     const lang = this.currentLang();
     const langButtons = LANGS.map(
@@ -39,14 +49,12 @@ export class PiNav extends HTMLElement {
 
     this.innerHTML = html.replace('__LANG_BUTTONS__', langButtons);
 
+    this.querySelector<HTMLButtonElement>('[data-nav="upload"]')?.addEventListener('click', () => {
+      this.navigate('/');
+    });
+
     this.querySelector<HTMLButtonElement>('[data-nav="about"]')?.addEventListener('click', () => {
-      this.dispatchEvent(
-        new CustomEvent<{ path: string }>('request-navigate', {
-          detail: { path: '/about' },
-          bubbles: true,
-          composed: true,
-        }),
-      );
+      this.navigate('/about');
     });
 
     this.querySelectorAll<HTMLButtonElement>('[data-lang]').forEach((btn) => {
