@@ -21,6 +21,7 @@ export type EditScreenFile = {
 };
 
 interface FileMeta {
+  id: string;
   fileName: string;
   tint: PageTint;
 }
@@ -109,7 +110,9 @@ export class EditScreen extends HTMLElement {
     if (!first) return;
 
     this.workingDoc = first.doc;
-    this.fileMetas = [{ fileName: first.fileName, tint: tintForFileIndex(0) }];
+    this.fileMetas = [
+      { id: crypto.randomUUID(), fileName: first.fileName, tint: tintForFileIndex(0) },
+    ];
     this.pageFileIndex = Array.from({ length: first.doc.pageCount }, () => 0);
     this.originalPageNumbers = Array.from({ length: first.doc.pageCount }, (_, i) => i + 1);
 
@@ -121,6 +124,7 @@ export class EditScreen extends HTMLElement {
         const added = this.workingDoc.pageCount - before;
         const fileIndex = this.fileMetas.length;
         this.fileMetas.push({
+          id: crypto.randomUUID(),
           fileName: slot.fileName,
           tint: tintForFileIndex(fileIndex),
         });
@@ -251,10 +255,11 @@ export class EditScreen extends HTMLElement {
     const doc = this.workingDoc;
     if (!doc) return;
     const pid = card.dataset.pageId;
-    const idx = pid ? this.pageIds.indexOf(pid) : -1;
-    if (idx < 0) return;
+    if (!pid) return;
 
     if (action === 'rotate') {
+      const idx = this.pageIds.indexOf(pid);
+      if (idx < 0) return;
       try {
         await doc.rotatePage(idx, 90);
         card.invalidate();
@@ -265,14 +270,55 @@ export class EditScreen extends HTMLElement {
     }
 
     if (action === 'delete') {
-      this.pageFileIndex.splice(idx, 1);
-      this.originalPageNumbers.splice(idx, 1);
-      this.pageIds.splice(idx, 1);
-      try {
-        await doc.deletePage(idx);
-      } catch (err) {
-        console.error('[pidief] Suppression impossible:', err);
+      this.enqueuePageRemoval(pid);
+    }
+  }
+
+  /**
+   * Empile une suppression de page sur la même file que les suppressions de fichier
+   * pour interdire tout interleave. Le `data-removing` est appliqué tout de suite
+   * (feedback visuel immédiat), et le timer d'animation est figé au moment du clic,
+   * pas à l'exécution effective — évite d'attendre 180 ms supplémentaires quand la
+   * carte a déjà fini de s'estomper pendant le tour précédent de la file.
+   */
+  private enqueuePageRemoval(pageId: string): void {
+    const card = this.cards.get(pageId);
+    if (card && card.dataset.removing === 'true') return;
+    if (card) card.dataset.removing = 'true';
+
+    const reduceMotion =
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+    const animationDone = new Promise<void>((resolve) => {
+      window.setTimeout(resolve, reduceMotion ? 0 : 180);
+    });
+
+    this.removalChain = this.removalChain.then(() => this.removePage(pageId, animationDone));
+  }
+
+  private async removePage(pageId: string, animationDone: Promise<void>): Promise<void> {
+    const doc = this.workingDoc;
+    if (!doc) return;
+    const idx = this.pageIds.indexOf(pageId);
+    if (idx < 0) return;
+
+    doc.removeEventListener('change', this.onWorkingChange);
+    try {
+      await Promise.all([doc.deletePage(idx), animationDone]);
+      const idxNow = this.pageIds.indexOf(pageId);
+      if (idxNow >= 0) {
+        this.pageFileIndex.splice(idxNow, 1);
+        this.originalPageNumbers.splice(idxNow, 1);
+        this.pageIds.splice(idxNow, 1);
       }
+      this.animateReorder(() => {
+        this.reconcile();
+      });
+    } catch (err) {
+      const card = this.cards.get(pageId);
+      if (card) delete card.dataset.removing;
+      console.error('[pidief] Suppression impossible:', err);
+    } finally {
+      doc.addEventListener('change', this.onWorkingChange);
     }
   }
 
@@ -280,21 +326,21 @@ export class EditScreen extends HTMLElement {
     const t = event.target as HTMLElement | null;
     const btn = t?.closest<HTMLButtonElement>('[data-action="remove-file"]');
     if (!btn || !this.contains(btn)) return;
-    const raw = btn.dataset.fileIndex;
-    const idx = raw !== undefined ? Number.parseInt(raw, 10) : NaN;
-    if (!Number.isFinite(idx)) return;
+    const fileId = btn.dataset.fileId;
+    if (!fileId) return;
     event.preventDefault();
     event.stopPropagation();
-    void this.removeMergedFileAtIndex(idx);
+    this.enqueueRemoval(fileId);
   };
 
   private readonly onLegendScrollToFileClick = (event: MouseEvent): void => {
     const t = event.target as HTMLElement | null;
     const btn = t?.closest<HTMLButtonElement>('[data-action="scroll-to-file"]');
     if (!btn || !this.contains(btn)) return;
-    const raw = btn.dataset.fileIndex;
-    const idx = raw !== undefined ? Number.parseInt(raw, 10) : NaN;
-    if (!Number.isFinite(idx)) return;
+    const fileId = btn.dataset.fileId;
+    if (!fileId) return;
+    const idx = this.fileMetas.findIndex((m) => m.id === fileId);
+    if (idx < 0) return;
     event.preventDefault();
     this.scrollToFirstPageOfFile(idx);
     queueMicrotask(() => {
@@ -324,34 +370,86 @@ export class EditScreen extends HTMLElement {
     card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
   }
 
-  private async removeMergedFileAtIndex(fileIndex: number): Promise<void> {
+  private removalChain: Promise<void> = Promise.resolve();
+
+  /**
+   * File de suppression sérialisée : chaque clic empile une opération atomique
+   * sur la chaîne. La résolution par `fileId` reste correcte même si les indices
+   * `fileMetas` ont bougé entre le clic et l'exécution effective.
+   */
+  private enqueueRemoval(fileId: string): void {
+    this.removalChain = this.removalChain.then(() => this.removeMergedFile(fileId));
+  }
+
+  /**
+   * Supprime atomiquement toutes les pages d'un fichier mergé :
+   * - marque cartes + item de légende avec `data-removing` pour déclencher le fade-out CSS ;
+   * - détache `change` pour bloquer tout `reconcile` parasite mid-flight ;
+   * - envoie un seul batch `deletePages` au worker, en parallèle de l'animation de sortie ;
+   * - n'applique les splices locaux qu'après confirmation worker ET fin de l'anim ;
+   * - réattache le listener et `reconcile()` une seule fois, encadré par un FLIP
+   *   pour que les pages restantes glissent dans leurs nouvelles positions.
+   *
+   * Les clics concurrents sont sérialisés via `enqueueRemoval`, et les fichiers
+   * sont identifiés par un `id` stable plutôt que par index pour éviter qu'un
+   * décalage post-splice ne fasse cibler le mauvais fichier.
+   */
+  private async removeMergedFile(fileId: string): Promise<void> {
     const doc = this.workingDoc;
     if (!doc) return;
-    if (fileIndex < 0 || fileIndex >= this.fileMetas.length) return;
+    const fileIndex = this.fileMetas.findIndex((m) => m.id === fileId);
+    if (fileIndex < 0) return;
 
-    const pageIndices = this.pageFileIndex
-      .map((fi, p) => (fi === fileIndex ? p : -1))
-      .filter((p) => p >= 0)
-      .sort((a, b) => b - a);
-
-    for (const p of pageIndices) {
-      this.pageFileIndex.splice(p, 1);
-      this.originalPageNumbers.splice(p, 1);
-      this.pageIds.splice(p, 1);
-      try {
-        await doc.deletePage(p);
-      } catch (err) {
-        console.error('[pidief] Suppression du fichier impossible:', err);
-      }
-    }
-
-    this.fileMetas.splice(fileIndex, 1);
+    const pageIndices: number[] = [];
     for (let i = 0; i < this.pageFileIndex.length; i++) {
-      const v = this.pageFileIndex[i]!;
-      if (v > fileIndex) this.pageFileIndex[i] = v - 1;
+      if (this.pageFileIndex[i] === fileIndex) pageIndices.push(i);
     }
+    if (pageIndices.length === 0) return;
 
-    this.reconcile();
+    const cardsToRemove: PiPageCard[] = [];
+    for (const p of pageIndices) {
+      const pid = this.pageIds[p];
+      if (!pid) continue;
+      const card = this.cards.get(pid);
+      if (card) cardsToRemove.push(card);
+    }
+    const legendItem = this.querySelector<HTMLElement>(
+      `.pi-edit__legend-item[data-file-id="${CSS.escape(fileId)}"]`,
+    );
+
+    for (const card of cardsToRemove) card.dataset.removing = 'true';
+    if (legendItem) legendItem.dataset.removing = 'true';
+
+    const reduceMotion =
+      window.matchMedia?.('(prefers-reduced-motion: reduce)').matches === true;
+    const animationDone = new Promise<void>((resolve) => {
+      window.setTimeout(resolve, reduceMotion ? 0 : 180);
+    });
+
+    doc.removeEventListener('change', this.onWorkingChange);
+    try {
+      await Promise.all([doc.deletePages(pageIndices), animationDone]);
+      const sortedDesc = pageIndices.slice().sort((a, b) => b - a);
+      for (const p of sortedDesc) {
+        this.pageFileIndex.splice(p, 1);
+        this.originalPageNumbers.splice(p, 1);
+        this.pageIds.splice(p, 1);
+      }
+      this.fileMetas.splice(fileIndex, 1);
+      for (let i = 0; i < this.pageFileIndex.length; i++) {
+        const v = this.pageFileIndex[i]!;
+        if (v > fileIndex) this.pageFileIndex[i] = v - 1;
+      }
+      this.animateReorder(() => {
+        this.reconcile();
+      });
+    } catch (err) {
+      for (const card of cardsToRemove) delete card.dataset.removing;
+      if (legendItem) delete legendItem.dataset.removing;
+      console.error('[pidief] Suppression du fichier impossible:', err);
+    } finally {
+      doc.addEventListener('change', this.onWorkingChange);
+    }
   }
 
   // --- Ajouter un PDF ---
@@ -394,6 +492,7 @@ export class EditScreen extends HTMLElement {
         const count = doc.pageCount - before;
         const fileIndex = this.fileMetas.length;
         this.fileMetas.push({
+          id: crypto.randomUUID(),
           fileName: file.name,
           tint: tintForFileIndex(fileIndex),
         });
@@ -540,7 +639,8 @@ export class EditScreen extends HTMLElement {
         const ariaRemove = escapeHtml(`Retirer ${meta.fileName} du projet`);
         const ariaScroll = escapeHtml(`Aller à la première page dans la grille : ${meta.fileName}`);
         const fileNameId = i === 0 ? ' id="edit-first-legend-file-name"' : '';
-        return `<span class="pi-edit__legend-item" data-file-index="${i}" style="--pi-legend-file-color:${escapeHtml(meta.tint.color)}"><span class="pi-edit__legend-body"><button type="button" class="pi-edit__legend-main" data-action="scroll-to-file" data-file-index="${i}" aria-label="${ariaScroll}" title="Voir la première page dans la grille">${marker}<span class="pi-edit__legend-name"${fileNameId}>${escapeHtml(meta.fileName)}</span><span class="pi-edit__legend-count">${count} p.</span></button><button type="button" class="pi-edit__legend-remove" data-action="remove-file" data-file-index="${i}" title="Retirer ce fichier du projet" aria-label="${ariaRemove}"><pi-icon name="trash" size="14"></pi-icon></button></span></span>`;
+        const fileId = escapeHtml(meta.id);
+        return `<span class="pi-edit__legend-item" data-file-index="${i}" data-file-id="${fileId}" style="--pi-legend-file-color:${escapeHtml(meta.tint.color)}"><span class="pi-edit__legend-body"><button type="button" class="pi-edit__legend-main" data-action="scroll-to-file" data-file-id="${fileId}" aria-label="${ariaScroll}" title="Voir la première page dans la grille">${marker}<span class="pi-edit__legend-name"${fileNameId}>${escapeHtml(meta.fileName)}</span><span class="pi-edit__legend-count">${count} p.</span></button><button type="button" class="pi-edit__legend-remove" data-action="remove-file" data-file-id="${fileId}" title="Retirer ce fichier du projet" aria-label="${ariaRemove}"><pi-icon name="trash" size="14"></pi-icon></button></span></span>`;
       })
       .join('');
   }

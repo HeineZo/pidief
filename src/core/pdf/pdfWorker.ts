@@ -269,6 +269,34 @@ async function handle(req: PdfRequest): Promise<void> {
         return;
       }
 
+      case 'deletePages': {
+        const pdf = requireDoc(req.docId);
+        const n = pdf.countPages();
+        const remove = new Set<number>();
+        for (const i of req.pageIndices) {
+          if (i < 0 || i >= n) {
+            throw new Error(`L'index ${i} est invalide`);
+          }
+          remove.add(i);
+        }
+        if (remove.size > 0) {
+          const order: number[] = [];
+          for (let i = 0; i < n; i++) {
+            if (!remove.has(i)) order.push(i);
+          }
+          pdf.rearrangePages(order);
+        }
+        const pages = collectSnapshot(pdf);
+        reply({
+          type: 'docMutationOk',
+          requestId,
+          docId: req.docId,
+          pages,
+          pageCount: pages.length,
+        });
+        return;
+      }
+
       case 'export': {
         const pdf = requireDoc(req.docId);
         const buf = pdf.saveToBuffer('garbage,compress');
