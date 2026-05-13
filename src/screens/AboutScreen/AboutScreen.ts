@@ -15,17 +15,20 @@ type CompareRowKey =
   | 'offline'
   | 'openSource'
 
+/** Cellule service concurrent dans le comparatif. */
 interface ThemCell {
   value: CompareCell;
   label?: string;
   title?: string;
 }
 
+/** Données d’une ligne complète du comparatif */
 interface CompareRowData {
   pidief: CompareCell;
   them: Record<CompetitorId, ThemCell>;
 }
 
+/** Forme attendue du fichier de comparaison */
 interface AboutCompareManifest {
   displayNames: Record<CompetitorId, string>;
   pidiefCellTitles: Partial<Record<CompareRowKey, string>>;
@@ -46,12 +49,16 @@ const ICON_MEH =
   '<svg xmlns="http://www.w3.org/2000/svg" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M8 15h8M9 9h.01M15 9h.01"/></svg>';
 const HOW_STEP_DURATION_MS = 10_000;
 
+/** Variante visuelle dérivée d’une valeur métier du comparatif. */
 interface CellVisual {
   text: string;
   mod: 'yes' | 'no' | 'meh';
   icon: string;
 }
 
+/**
+ * Associe chaque valeur de cellule à son libellé, son icône et sa classe CSS.
+ */
 function cellVisual(value: CompareCell): CellVisual {
   switch (value) {
     case 'yes':
@@ -70,6 +77,7 @@ function cellVisual(value: CompareCell): CellVisual {
   }
 }
 
+/** Échappe une chaîne destinée à être placée dans un attribut HTML. */
 function escapeAttr(text: string): string {
   return text
     .replace(/&/g, '&amp;')
@@ -78,6 +86,7 @@ function escapeAttr(text: string): string {
     .replace(/>/g, '&gt;');
 }
 
+/** Échappe une chaîne destinée à être injectée dans du HTML. */
 function escapeHtml(text: string): string {
   return text
     .replace(/&/g, '&amp;')
@@ -86,11 +95,13 @@ function escapeHtml(text: string): string {
     .replace(/"/g, '&quot;');
 }
 
+/** Options de rendu pour compléter ou remplacer le libellé par défaut. */
 interface CompareCellOptions {
   title?: string;
   label?: string;
 }
 
+/** Données extraites d’un bouton d’étape pour piloter la vidéo associée. */
 interface HowStepData {
   button: HTMLButtonElement;
   title: string;
@@ -116,12 +127,14 @@ export class AboutScreen extends HTMLElement {
   private activeCompetitor: CompetitorId = 'iLovePDF';
   private activeHowStep = 0;
 
+  /** Monte le template puis initialise les interactions locales à l’écran. */
   connectedCallback(): void {
     this.innerHTML = template;
     this.initCompareTable();
     this.initHowFlow();
   }
 
+  /** Nettoie les listeners et timers quand l’écran quitte le DOM. */
   disconnectedCallback(): void {
     this.compareAbort?.abort();
     this.compareAbort = null;
@@ -130,6 +143,7 @@ export class AboutScreen extends HTMLElement {
     this.clearHowStepTimer();
   }
 
+  /** Initialise le tableau comparatif et son sélecteur de service concurrent. */
   private initCompareTable(): void {
     const toggle = this.querySelector<HTMLElement>('[data-compare-toggle]');
     const nameEl = this.querySelector<HTMLElement>('[data-competitor-name]');
@@ -176,6 +190,7 @@ export class AboutScreen extends HTMLElement {
     );
   }
 
+  /** Applique les données du concurrent sélectionné au tableau comparatif. */
   private applyCompetitor(
     id: CompetitorId,
     nameEl: HTMLElement,
@@ -211,6 +226,7 @@ export class AboutScreen extends HTMLElement {
     }
   }
 
+  /** Branche les boutons d’étapes à la vidéo et lance le passage automatique. */
   private initHowFlow(): void {
     const flow = this.querySelector<HTMLElement>('[data-how-flow]');
     const video = this.querySelector<HTMLVideoElement>('[data-how-video-media]');
@@ -253,6 +269,7 @@ export class AboutScreen extends HTMLElement {
     return { button, title, videoSrc, videoType, videoLabel };
   }
 
+  /** Active visuellement une étape et synchronise la vidéo associée. */
   private applyHowStep(
     index: number,
     steps: HowStepData[],
@@ -275,6 +292,7 @@ export class AboutScreen extends HTMLElement {
     this.updateHowVideo(video, videoShell, step);
   }
 
+  /** Remplace la source de la vidéo sans recréer tout le bloc vidéo. */
   private updateHowVideo(video: HTMLVideoElement, videoShell: HTMLElement, step: HowStepData): void {
     while (video.firstChild) {
       video.firstChild.remove();
@@ -297,6 +315,7 @@ export class AboutScreen extends HTMLElement {
     void video.play().catch(() => undefined);
   }
 
+  /** Programme le passage à l’étape suivante en boucle. */
   private scheduleNextHowStep(
     steps: HowStepData[],
     video: HTMLVideoElement,
@@ -310,12 +329,14 @@ export class AboutScreen extends HTMLElement {
     }, HOW_STEP_DURATION_MS);
   }
 
+  /** Annule le timer d’étapes courant s’il existe. */
   private clearHowStepTimer(): void {
     if (this.howStepTimer === null) return;
     window.clearTimeout(this.howStepTimer);
     this.howStepTimer = null;
   }
 
+  /** Relance l’animation CSS de progression quand une étape devient active. */
   private restartHowProgress(button: HTMLButtonElement): void {
     const progressBar = button.querySelector<HTMLElement>('.how-step__progress-bar');
     if (!progressBar) return;
