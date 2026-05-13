@@ -4,7 +4,11 @@ import '@components/edit/PageCard/PiPageCard';
 import { PdfEngine } from '@core/pdf/PdfEngine';
 import type { PdfDocument } from '@core/pdf/PdfDocument';
 import { tintForFileIndex, type PageTint } from '@components/edit/PageCard/palette';
-import { PiPageCard, type PageCardAction } from '@components/edit/PageCard/PiPageCard';
+import {
+  PiPageCard,
+  type PageCardAction,
+  type PageMoveDirection,
+} from '@components/edit/PageCard/PiPageCard';
 import template from './editScreen.html?raw';
 import './editScreen.css';
 import { scrollToBottom } from '@util/scrollToBottom';
@@ -167,6 +171,13 @@ export class EditScreen extends HTMLElement {
       const target = (ce.composedPath()[0] as HTMLElement).closest<PiPageCard>('pi-page-card');
       if (!target) return;
       void this.handlePageAction(target, ce.detail.action);
+    });
+
+    this.addEventListener('page-move', (event) => {
+      const ce = event as CustomEvent<{ direction: PageMoveDirection }>;
+      const target = (ce.composedPath()[0] as HTMLElement).closest<PiPageCard>('pi-page-card');
+      if (!target) return;
+      this.handlePageMove(target, ce.detail.direction);
     });
 
     this.addEventListener('click', this.onRemoveMergedFileClick);
@@ -442,6 +453,7 @@ export class EditScreen extends HTMLElement {
       card.setAttribute('page-index', String(idx));
       card.setAttribute('display-order', String(idx + 1));
       card.setAttribute('original-page', String(original));
+      card.setAttribute('total-pages', String(desiredIds.length));
       card.dataset.fileIndex = String(fileIndex);
       if (meta) {
         card.setAttribute('file-name', meta.fileName);
@@ -704,30 +716,15 @@ export class EditScreen extends HTMLElement {
       beforeRects.set(h.el, h.el.getBoundingClientRect());
     }
 
-    const [pid] = this.pageIds.splice(from, 1);
-    if (pid !== undefined) this.pageIds.splice(to, 0, pid);
-    const [attr] = this.pageFileIndex.splice(from, 1);
-    if (attr !== undefined) this.pageFileIndex.splice(to, 0, attr);
-    const [orig] = this.originalPageNumbers.splice(from, 1);
-    if (orig !== undefined) this.originalPageNumbers.splice(to, 0, orig);
-
-    for (const h of sess.homes) {
-      h.el.style.transition = 'none';
-      h.el.style.transform = '';
-    }
-
-    this.reconcile();
-
-    for (const h of sess.homes) {
-      const before = beforeRects.get(h.el);
-      if (!before) continue;
-      const after = h.el.getBoundingClientRect();
-      const dx = before.left - after.left;
-      const dy = before.top - after.top;
-      if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
-        h.el.style.transform = `translate(${dx}px, ${dy}px)`;
-      }
-    }
+    this.applyFlipFromRects(beforeRects, () => {
+      const [pid] = this.pageIds.splice(from, 1);
+      if (pid !== undefined) this.pageIds.splice(to, 0, pid);
+      const [attr] = this.pageFileIndex.splice(from, 1);
+      if (attr !== undefined) this.pageFileIndex.splice(to, 0, attr);
+      const [orig] = this.originalPageNumbers.splice(from, 1);
+      if (orig !== undefined) this.originalPageNumbers.splice(to, 0, orig);
+      this.reconcile();
+    });
 
     sess.cardEl.dataset.dragging = 'false';
     delete sess.cardEl.dataset.dragging;
@@ -736,22 +733,126 @@ export class EditScreen extends HTMLElement {
       delete grid.dataset.dragging;
     }
 
-    requestAnimationFrame(() => {
-      for (const h of sess.homes) {
-        h.el.style.transition = 'transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1)';
-        h.el.style.transform = '';
-      }
-    });
-    window.setTimeout(() => {
-      for (const h of sess.homes) {
-        h.el.style.transition = '';
-      }
-    }, 220);
-
     void this.workingDoc?.movePage(from, to).catch((err) => {
       console.error('[pidief] Move impossible:', err);
     });
   };
+
+  // --- Reorder clavier (a11y) ---
+
+  private handlePageMove(card: PiPageCard, direction: PageMoveDirection): void {
+    if (this.dragSession) return;
+    const doc = this.workingDoc;
+    if (!doc) return;
+    const pid = card.dataset.pageId;
+    const fromIdx = pid ? this.pageIds.indexOf(pid) : -1;
+    if (fromIdx < 0) return;
+
+    const last = this.pageIds.length - 1;
+    let toIdx = fromIdx;
+    switch (direction) {
+      case 'left':
+        toIdx = fromIdx - 1;
+        break;
+      case 'right':
+        toIdx = fromIdx + 1;
+        break;
+      case 'up':
+        toIdx = fromIdx - this.gridColumns;
+        break;
+      case 'down':
+        toIdx = fromIdx + this.gridColumns;
+        break;
+    }
+    toIdx = Math.max(0, Math.min(last, toIdx));
+    if (toIdx === fromIdx) return;
+
+    this.animateReorder(() => {
+      this.swapAt(fromIdx, toIdx);
+      this.reconcile();
+    });
+
+    card.focus();
+    card.scrollIntoView({ block: 'nearest', behavior: 'smooth' });
+    this.announceMove(toIdx + 1, last + 1);
+
+    void this.swapPagesInDoc(doc, fromIdx, toIdx);
+  }
+
+  private swapAt(a: number, b: number): void {
+    [this.pageIds[a], this.pageIds[b]] = [this.pageIds[b]!, this.pageIds[a]!];
+    [this.pageFileIndex[a], this.pageFileIndex[b]] = [
+      this.pageFileIndex[b]!,
+      this.pageFileIndex[a]!,
+    ];
+    [this.originalPageNumbers[a], this.originalPageNumbers[b]] = [
+      this.originalPageNumbers[b]!,
+      this.originalPageNumbers[a]!,
+    ];
+  }
+
+  private async swapPagesInDoc(doc: PdfDocument, from: number, to: number): Promise<void> {
+    try {
+      await doc.movePage(from, to);
+      await doc.movePage(to > from ? to - 1 : to + 1, from);
+    } catch (err) {
+      console.error('[pidief] Swap impossible:', err);
+    }
+  }
+
+  private announceMove(position: number, total: number): void {
+    const announcer = this.querySelector<HTMLElement>('[data-move-announcer]');
+    if (!announcer) return;
+    announcer.textContent = '';
+    queueMicrotask(() => {
+      announcer.textContent = `Page déplacée à la position ${position} sur ${total}.`;
+    });
+  }
+
+  // --- Helper FLIP partagé (drag + clavier) ---
+
+  private animateReorder(mutate: () => void): void {
+    const grid = this.querySelector<HTMLElement>('[data-grid]');
+    if (!grid) {
+      mutate();
+      return;
+    }
+    const beforeRects = new Map<PiPageCard, DOMRect>();
+    for (const el of Array.from(grid.querySelectorAll<PiPageCard>('pi-page-card'))) {
+      beforeRects.set(el, el.getBoundingClientRect());
+    }
+    this.applyFlipFromRects(beforeRects, mutate);
+  }
+
+  private applyFlipFromRects(
+    beforeRects: Map<PiPageCard, DOMRect>,
+    mutate: () => void,
+  ): void {
+    for (const [el] of beforeRects) {
+      el.style.transition = 'none';
+      el.style.transform = '';
+    }
+    mutate();
+    for (const [el, before] of beforeRects) {
+      const after = el.getBoundingClientRect();
+      const dx = before.left - after.left;
+      const dy = before.top - after.top;
+      if (Math.abs(dx) > 0.5 || Math.abs(dy) > 0.5) {
+        el.style.transform = `translate(${dx}px, ${dy}px)`;
+      }
+    }
+    requestAnimationFrame(() => {
+      for (const [el] of beforeRects) {
+        el.style.transition = 'transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1)';
+        el.style.transform = '';
+      }
+    });
+    window.setTimeout(() => {
+      for (const [el] of beforeRects) {
+        el.style.transition = '';
+      }
+    }, 220);
+  }
 }
 
 if (!customElements.get('pi-edit-screen')) {

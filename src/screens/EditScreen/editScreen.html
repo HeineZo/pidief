@@ -39,9 +39,14 @@
       </div>
     </div>
   </header>
-  <div class="pi-edit__grid" data-grid></div>
+  <div
+    class="pi-edit__grid"
+    data-grid
+    aria-label="Pages PDF, naviguez avec Tab et déplacez avec les flèches"
+  ></div>
   <div class="pi-edit__empty" data-empty hidden>
     <p>Aucune page restante. Ajoutez un PDF pour continuer.</p>
   </div>
+  <div class="sr-only" aria-live="polite" aria-atomic="true" data-move-announcer></div>
   <input type="file" accept="application/pdf" multiple hidden data-add-input />
 </section>

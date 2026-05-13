@@ -5,15 +5,23 @@ import './pageCard.css';
 import type { PageTint } from './palette';
 
 export type PageCardAction = 'rotate' | 'delete';
+export type PageMoveDirection = 'left' | 'right' | 'up' | 'down';
 
 const ACTIONS: ReadonlySet<PageCardAction> = new Set(['rotate', 'delete']);
 
 const isAction = (value: string | null): value is PageCardAction =>
   value !== null && (ACTIONS as Set<string>).has(value);
 
+const KEY_TO_DIRECTION: Record<string, PageMoveDirection> = {
+  ArrowLeft: 'left',
+  ArrowRight: 'right',
+  ArrowUp: 'up',
+  ArrowDown: 'down',
+};
+
 export class PiPageCard extends HTMLElement {
   static get observedAttributes(): string[] {
-    return ['page-index', 'file-name', 'display-order', 'original-page'];
+    return ['page-index', 'file-name', 'display-order', 'original-page', 'total-pages'];
   }
 
   private _doc: PdfDocument | null = null;
@@ -22,6 +30,7 @@ export class PiPageCard extends HTMLElement {
   private _drawToken = 0;
   private _layoutAttempts = 0;
   private _actionsBound = false;
+  private _keyboardBound = false;
 
   set doc(value: PdfDocument | null) {
     this._doc = value;
@@ -51,7 +60,12 @@ export class PiPageCard extends HTMLElement {
     if (!this.querySelector('.pi-page-card')) {
       this.innerHTML = template;
     }
+    if (!this.hasAttribute('tabindex')) this.setAttribute('tabindex', '0');
+    if (!this.hasAttribute('aria-roledescription')) {
+      this.setAttribute('aria-roledescription', 'Page déplaçable');
+    }
     this.bindActions();
+    this.bindKeyboard();
     this.applyTintVars();
     this.updateFooter();
     this.scheduleDraw();
@@ -87,6 +101,48 @@ export class PiPageCard extends HTMLElement {
     });
   }
 
+  private bindKeyboard(): void {
+    if (this._keyboardBound) return;
+    this._keyboardBound = true;
+    this.addEventListener('keydown', (event) => {
+      if (event.target !== this) return;
+      if (event.altKey || event.ctrlKey || event.metaKey) return;
+      if (event.key === 'Enter' && !event.shiftKey) {
+        const firstAction = this.querySelector<HTMLButtonElement>('[data-action]');
+        if (!firstAction) return;
+        event.preventDefault();
+        event.stopPropagation();
+        this.setActionsTabbable(true);
+        firstAction.focus();
+        return;
+      }
+      if (event.shiftKey) return;
+      const direction = KEY_TO_DIRECTION[event.key];
+      if (!direction) return;
+      event.preventDefault();
+      event.stopPropagation();
+      this.dispatchEvent(
+        new CustomEvent<{ direction: PageMoveDirection }>('page-move', {
+          detail: { direction },
+          bubbles: true,
+          composed: true,
+        }),
+      );
+    });
+    this.addEventListener('focusout', (event) => {
+      const next = (event.relatedTarget as Node | null) ?? null;
+      if (next && this.contains(next)) return;
+      this.setActionsTabbable(false);
+    });
+  }
+
+  private setActionsTabbable(tabbable: boolean): void {
+    const buttons = this.querySelectorAll<HTMLButtonElement>('[data-action]');
+    buttons.forEach((btn) => {
+      btn.tabIndex = tabbable ? 0 : -1;
+    });
+  }
+
   private applyTintVars(): void {
     const t = this._tint;
     if (!t) return;
@@ -109,8 +165,8 @@ export class PiPageCard extends HTMLElement {
     if (label) {
       label.textContent = pageLabel;
     }
+    const cleanName = name.replace(/\.pdf$/i, '');
     if (titleBar) {
-      const cleanName = name.replace(/\.pdf$/i, '');
       if (pageLabel && cleanName) {
         titleBar.setAttribute('aria-label', `${pageLabel} de ${cleanName}`);
         titleBar.setAttribute('title', `${pageLabel} — ${cleanName}`);
@@ -127,6 +183,27 @@ export class PiPageCard extends HTMLElement {
     if (num) {
       num.textContent = Number.isFinite(n) && n > 0 ? String(n).padStart(2, '0') : '';
     }
+    this.updateHostAriaLabel(pageLabel, cleanName, n);
+  }
+
+  private updateHostAriaLabel(pageLabel: string, cleanName: string, displayOrder: number): void {
+    const totalRaw = this.getAttribute('total-pages');
+    const total = totalRaw !== null ? Number.parseInt(totalRaw, 10) : NaN;
+    const parts: string[] = [];
+    if (pageLabel) {
+      parts.push(cleanName ? `${pageLabel} de ${cleanName}` : pageLabel);
+    } else if (cleanName) {
+      parts.push(cleanName);
+    }
+    if (Number.isFinite(displayOrder) && displayOrder > 0) {
+      if (Number.isFinite(total) && total > 0) {
+        parts.push(`position ${displayOrder} sur ${total}`);
+      } else {
+        parts.push(`position ${displayOrder}`);
+      }
+    }
+    parts.push('Utilisez les flèches pour déplacer.');
+    this.setAttribute('aria-label', parts.join(', '));
   }
 
   private parsePageIndex(): number {
