@@ -79,19 +79,6 @@ export class UploadScreen extends HTMLElement {
       },
     );
 
-    this.querySelector<HTMLButtonElement>('[data-action="about"]')?.addEventListener(
-      'click',
-      () => {
-        this.dispatchEvent(
-          new CustomEvent<{ path: string }>('request-navigate', {
-            detail: { path: '/about' },
-            bubbles: true,
-            composed: true,
-          }),
-        );
-      },
-    );
-
     this.querySelector<HTMLButtonElement>('[data-clear]')?.addEventListener(
       'click',
       () => {

@@ -48,13 +48,6 @@
   font-weight: 400;
 }
 
-.pi-upload__title em {
-  color: var(--color-accent);
-  font-style: italic;
-  font-family: var(--font-serif);
-  font-weight: 400;
-}
-
 .pi-upload__title-row {
   display: inline-flex;
   align-items: center;
@@ -93,13 +86,6 @@ button.pi-upload__badge:focus-visible {
   height: 60%;
 }
 
-.pi-upload__badge--square {
-  transform: rotate(-4deg);
-  background: var(--color-accent-bg);
-  color: var(--color-accent);
-  border-radius: var(--radius-lg);
-}
-
 .pi-upload__badge:hover {
   transform: rotate(0deg) scale(1.05);
 }
@@ -109,6 +95,11 @@ button.pi-upload__badge:focus-visible {
   background: var(--color-accent);
   color: var(--color-accent-light);
   border-radius: var(--radius-full);
+}
+
+.pi-upload__title-privacy {
+  color: var(--color-accent);
+  font-style: normal;
 }
 
 .pi-upload__sub {
