@@ -1,23 +1,38 @@
 import html from './nav.html?raw';
 import './nav.css';
+import {
+  applyTranslations,
+  getCurrentLang,
+  setLang,
+  subscribe,
+  t,
+  type Lang,
+} from '@i18n';
 
-const LANGS = ['FR', 'EN'] as const;
-type Lang = (typeof LANGS)[number];
+const LANGS: readonly Lang[] = ['fr', 'en'];
 
-const LANG_FULL_NAME: Record<Lang, string> = {
-  FR: 'Français',
-  EN: 'English',
+const LANG_LABEL_KEY: Record<Lang, string> = {
+  fr: 'nav.langFr',
+  en: 'nav.langEn',
+};
+
+const LANG_BUTTON_LABEL: Record<Lang, string> = {
+  fr: 'FR',
+  en: 'EN',
 };
 
 const isLang = (value: string | null): value is Lang =>
   value !== null && (LANGS as readonly string[]).includes(value);
 
 /**
- * <pi-nav lang=\"FR\"></pi-nav>
+ * <pi-nav></pi-nav>
  *
- * \u00c9met `lang-changed` (CustomEvent<{ lang: Lang }>) lorsque l'utilisateur change la langue.
+ * Source de vérité de la langue : `@i18n.lang`. Le composant écoute
+ * `lang-changed` pour ré-appliquer les libellés / l'état actif sans recharger.
  */
 export class PiNav extends HTMLElement {
+  private unsubscribeLang: (() => void) | null = null;
+
   private readonly onPopState = (): void => {
     this.updateActiveLink();
   };
@@ -25,40 +40,18 @@ export class PiNav extends HTMLElement {
     this.updateActiveLink();
   };
 
-  static get observedAttributes(): string[] {
-    return ['lang'];
-  }
-
   connectedCallback(): void {
     this.render();
-    this.syncDocumentLang();
     window.addEventListener('popstate', this.onPopState);
     window.addEventListener('request-navigate', this.onLocationChange);
+    this.unsubscribeLang = subscribe(() => this.onLangChanged());
   }
 
   disconnectedCallback(): void {
     window.removeEventListener('popstate', this.onPopState);
     window.removeEventListener('request-navigate', this.onLocationChange);
-  }
-
-  attributeChangedCallback(): void {
-    if (this.isConnected) {
-      this.render();
-      this.syncDocumentLang();
-    }
-  }
-
-  private currentLang(): Lang {
-    const raw = this.getAttribute('lang');
-    return isLang(raw) ? raw : 'FR';
-  }
-
-  private syncDocumentLang(): void {
-    const lang = this.currentLang();
-    const code = lang === 'FR' ? 'fr' : 'en';
-    if (document.documentElement.lang !== code) {
-      document.documentElement.lang = code;
-    }
+    this.unsubscribeLang?.();
+    this.unsubscribeLang = null;
   }
 
   private navigate(path: string): void {
@@ -84,14 +77,18 @@ export class PiNav extends HTMLElement {
     }
   }
 
-  private render(): void {
-    const lang = this.currentLang();
-    const langButtons = LANGS.map(
-      (l) =>
-        `<button type="button" data-lang="${l}" data-active="${l === lang}" aria-pressed="${l === lang}" aria-label="${LANG_FULL_NAME[l]}">${l}</button>`,
-    ).join('');
+  private renderLangButtons(): string {
+    const current = getCurrentLang();
+    return LANGS.map((l) => {
+      const active = l === current;
+      const ariaLabel = t(LANG_LABEL_KEY[l]);
+      return `<button type="button" data-lang="${l}" data-active="${active}" aria-pressed="${active}" aria-label="${ariaLabel}" data-i18n-attr="aria-label:${LANG_LABEL_KEY[l]}">${LANG_BUTTON_LABEL[l]}</button>`;
+    }).join('');
+  }
 
-    this.innerHTML = html.replace('__LANG_BUTTONS__', langButtons);
+  private render(): void {
+    this.innerHTML = html.replace('__LANG_BUTTONS__', this.renderLangButtons());
+    applyTranslations(this);
 
     this.querySelector<HTMLButtonElement>('[data-nav="upload"]')?.addEventListener('click', () => {
       this.navigate('/');
@@ -104,24 +101,26 @@ export class PiNav extends HTMLElement {
     this.querySelectorAll<HTMLButtonElement>('[data-lang]').forEach((btn) => {
       btn.addEventListener('click', () => {
         const next = btn.dataset.lang;
-        if (isLang(next ?? null) && next !== this.currentLang()) {
-          this.setAttribute('lang', next as Lang);
-          this.dispatchEvent(
-            new CustomEvent<{ lang: Lang }>('lang-changed', {
-              detail: { lang: next as Lang },
-              bubbles: true,
-              composed: true,
-            }),
-          );
+        if (isLang(next ?? null) && next !== getCurrentLang()) {
+          setLang(next as Lang);
         }
       });
     });
 
     this.updateActiveLink();
   }
+
+  private onLangChanged(): void {
+    applyTranslations(this);
+    const current = getCurrentLang();
+    this.querySelectorAll<HTMLButtonElement>('[data-lang]').forEach((btn) => {
+      const isActive = btn.dataset.lang === current;
+      btn.dataset.active = String(isActive);
+      btn.setAttribute('aria-pressed', String(isActive));
+    });
+  }
 }
 
 if (!customElements.get('pi-nav')) {
   customElements.define('pi-nav', PiNav);
 }
-

@@ -14,6 +14,7 @@ import './editScreen.css';
 import { scrollToBottom } from '@util/scrollToBottom';
 import { sendWarning } from '@util/Toast';
 import { MAX_UPLOAD_PDFS } from '@util/uploadPdfLimits';
+import { applyTranslations, subscribe, t } from '@i18n';
 
 export type EditScreenFile = {
   doc: PdfDocument;
@@ -68,6 +69,7 @@ export class EditScreen extends HTMLElement {
   };
 
   private scrollObserver: IntersectionObserver | null = null;
+  private unsubscribeLang: (() => void) | null = null;
 
   private dragSession: {
     cardEl: PiPageCard;
@@ -109,8 +111,16 @@ export class EditScreen extends HTMLElement {
   connectedCallback(): void {
     if (!this.querySelector('.pi-edit')) {
       this.innerHTML = template;
+      applyTranslations(this);
     }
     this.bindOnce();
+    this.unsubscribeLang = subscribe(() => {
+      applyTranslations(this);
+      this.applyGridColumns(this.gridColumns);
+      this.renderLegend();
+      this.syncAddPdfControls();
+      this.refreshAddPageButtonLabel();
+    });
     if (this._docs && !this.workingDoc) void this.bootstrap();
     else if (this.workingDoc) this.reconcile();
   }
@@ -121,6 +131,8 @@ export class EditScreen extends HTMLElement {
     this.workingDoc?.removeEventListener('change', this.onWorkingChange);
     this.scrollObserver?.disconnect();
     this.scrollObserver = null;
+    this.unsubscribeLang?.();
+    this.unsubscribeLang = null;
     const doc = this.workingDoc;
     this.workingDoc = null;
     this._docs = null;
@@ -255,9 +267,9 @@ export class EditScreen extends HTMLElement {
       slider.value = String(clamped);
       slider.style.setProperty('--pi-edit-grid-progress', `${progress}%`);
       slider.setAttribute('aria-valuenow', String(clamped));
-      slider.setAttribute('aria-valuetext', `${clamped} colonnes`);
+      slider.setAttribute('aria-valuetext', t('edit.gridColumnsValue', { n: clamped }));
     }
-    if (valueEl) valueEl.textContent = `${clamped} colonnes`;
+    if (valueEl) valueEl.textContent = t('edit.gridColumnsValue', { n: clamped });
     grid?.style.setProperty('--pi-edit-grid-columns', String(clamped));
   }
 
@@ -554,9 +566,7 @@ export class EditScreen extends HTMLElement {
 
     const remaining = MAX_UPLOAD_PDFS - activeFileCount(this.pageFileIndex);
     if (remaining <= 0) {
-      sendWarning(
-        `Limite de ${MAX_UPLOAD_PDFS} fichiers PDF atteinte. Supprimez un ou des fichiers pour en ajouter d'autres.`,
-      );
+      sendWarning(t('edit.addPdfLimitWarning', { max: MAX_UPLOAD_PDFS }));
       return;
     }
 
@@ -564,9 +574,7 @@ export class EditScreen extends HTMLElement {
     const skipped = pdfFiles.length - toProcess.length;
     if (skipped > 0) {
       sendWarning(
-        skipped === 1
-          ? `Un fichier n'a pas été ajouté : limite de ${MAX_UPLOAD_PDFS} PDF.`
-          : `${skipped} fichiers n'ont pas été ajoutés : limite de ${MAX_UPLOAD_PDFS} PDF.`,
+        t('upload.skippedFiles', { count: skipped, max: MAX_UPLOAD_PDFS }),
       );
     }
 
@@ -694,9 +702,8 @@ export class EditScreen extends HTMLElement {
 
     const hint = this.querySelector<HTMLElement>('[data-pdf-limit-hint]');
     if (hint) {
-      hint.textContent = atLimit
-        ? `${active} / ${MAX_UPLOAD_PDFS} fichiers PDF (limite atteinte, supprimez un fichier pour en ajouter un autre)`
-        : `${active} / ${MAX_UPLOAD_PDFS} fichiers PDF`;
+      const key = atLimit ? 'edit.limitHintAtLimit' : 'edit.limitHint';
+      hint.textContent = t(key, { active, max: MAX_UPLOAD_PDFS });
     }
 
     const addBtns = this.querySelectorAll<HTMLButtonElement>('[data-action="add-pdf"]');
@@ -705,7 +712,7 @@ export class EditScreen extends HTMLElement {
       if (atLimit) {
         btn.setAttribute(
           'title',
-          `Limite de ${MAX_UPLOAD_PDFS} fichiers PDF. Supprimez un ou des fichiers pour libérer une place.`,
+          t('edit.addPdfDisabledTitle', { max: MAX_UPLOAD_PDFS }),
         );
       } else {
         btn.removeAttribute('title');
@@ -729,11 +736,12 @@ export class EditScreen extends HTMLElement {
       button.type = 'button';
       button.className = 'pi-edit__grid-add-card';
       button.dataset.action = 'add-pdf';
-      button.setAttribute('aria-label', 'Ajouter un PDF');
+      button.setAttribute('data-i18n-attr', 'aria-label:edit.addPdfAria');
+      button.setAttribute('aria-label', t('edit.addPdfAria'));
       button.innerHTML = `
         <span class="pi-edit__grid-add-card__content">
           <pi-icon name="plus" size="20" stroke="1.8" aria-hidden="true"></pi-icon>
-          <span>Ajouter un PDF</span>
+          <span data-i18n="edit.addPdf">${t('edit.addPdf')}</span>
         </span>
       `;
     }
@@ -750,6 +758,15 @@ export class EditScreen extends HTMLElement {
     }
   }
 
+  private refreshAddPageButtonLabel(): void {
+    const grid = this.querySelector<HTMLElement>('[data-grid]');
+    const button = grid?.querySelector<HTMLButtonElement>(
+      '[data-action="add-pdf"].pi-edit__grid-add-card',
+    );
+    if (!button) return;
+    applyTranslations(button);
+  }
+
   private renderLegend(): void {
     const legend = this.querySelector<HTMLDivElement>('[data-legend]');
     if (!legend) return;
@@ -764,11 +781,14 @@ export class EditScreen extends HTMLElement {
         const count = counts.get(i) ?? 0;
         if (count === 0) return '';
         const marker = this.renderLegendMarker(meta.tint);
-        const ariaRemove = escapeHtml(`Retirer ${meta.fileName} du projet`);
-        const ariaScroll = escapeHtml(`Aller à la première page dans la grille : ${meta.fileName}`);
+        const ariaRemove = escapeHtml(t('edit.legendRemoveAria', { name: meta.fileName }));
+        const ariaScroll = escapeHtml(t('edit.legendScrollAria', { name: meta.fileName }));
+        const titleScroll = escapeHtml(t('edit.legendScrollTitle'));
+        const titleRemove = escapeHtml(t('edit.legendRemoveTitle'));
+        const countText = escapeHtml(t('edit.legendPageCount', { n: count }));
         const fileNameId = i === 0 ? ' id="edit-first-legend-file-name"' : '';
         const fileId = escapeHtml(meta.id);
-        return `<li class="pi-edit__legend-item" data-file-index="${i}" data-file-id="${fileId}" style="--pi-legend-file-color:${escapeHtml(meta.tint.color)}"><span class="pi-edit__legend-body"><button type="button" class="pi-edit__legend-main" data-action="scroll-to-file" data-file-id="${fileId}" aria-label="${ariaScroll}" title="Voir la première page dans la grille">${marker}<span class="pi-edit__legend-name"${fileNameId}>${escapeHtml(meta.fileName)}</span><span class="pi-edit__legend-count">${count} p.</span></button><button type="button" class="pi-edit__legend-remove" data-action="remove-file" data-file-id="${fileId}" title="Retirer ce fichier du projet" aria-label="${ariaRemove}"><pi-icon name="trash" size="14"></pi-icon></button></span></li>`;
+        return `<li class="pi-edit__legend-item" data-file-index="${i}" data-file-id="${fileId}" style="--pi-legend-file-color:${escapeHtml(meta.tint.color)}"><span class="pi-edit__legend-body"><button type="button" class="pi-edit__legend-main" data-action="scroll-to-file" data-file-id="${fileId}" aria-label="${ariaScroll}" title="${titleScroll}">${marker}<span class="pi-edit__legend-name"${fileNameId}>${escapeHtml(meta.fileName)}</span><span class="pi-edit__legend-count">${countText}</span></button><button type="button" class="pi-edit__legend-remove" data-action="remove-file" data-file-id="${fileId}" title="${titleRemove}" aria-label="${ariaRemove}"><pi-icon name="trash" size="14"></pi-icon></button></span></li>`;
       })
       .join('');
   }
@@ -1292,7 +1312,7 @@ export class EditScreen extends HTMLElement {
     if (!announcer) return;
     announcer.textContent = '';
     queueMicrotask(() => {
-      announcer.textContent = `Page déplacée à la position ${position} sur ${total}.`;
+      announcer.textContent = t('edit.moveAnnounced', { position, total });
     });
   }
 

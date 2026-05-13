@@ -21,7 +21,9 @@ test('PDF chiffré : toast d\u2019erreur, on reste sur l\u2019écran d\u2019uplo
 
   await page.locator('pi-upload-screen [data-action="continue"]').click();
 
-  await expect(page.getByText(/impossible d.?ouvrir le pdf/i)).toBeVisible({
+  await expect(
+    page.getByText(/(impossible d.?ouvrir le pdf|couldn.?t open the pdf)/i),
+  ).toBeVisible({
     timeout: 10_000,
   });
 

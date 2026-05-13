@@ -11,6 +11,7 @@ export default defineConfig({
       '@styles': r('./src/styles'),
       '@util': r('./src/core/util'),
       '@core/pdf': r('./src/core/pdf'),
+      '@i18n': r('./src/core/i18n'),
     },
   },
   worker: {

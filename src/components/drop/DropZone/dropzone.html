@@ -1,7 +1,7 @@
 <div class="wrap" data-dragging="false">
   <div class="ring"></div>
   <div class="ring ring--delay"></div>
-  <div class="zone" part="zone" role="button" tabindex="0" aria-label="Zone de dépôt : cliquez ou appuyez sur Entrée pour choisir un PDF">
+  <div class="zone" part="zone" role="button" tabindex="0" data-i18n-attr="aria-label:dropzone.zoneAriaLabel">
     <span class="icon">
       <svg
         width="26"
@@ -18,16 +18,14 @@
         <path d="M3 17v2a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-2" />
       </svg>
     </span>
-    <h2 class="title">Déposez vos PDFs ici</h2>
-    <p class="sub">ou choisissez une méthode ci-dessous</p>
+    <h2 class="title" data-i18n="dropzone.title"></h2>
+    <p class="sub" data-i18n="dropzone.sub"></p>
 
     <div class="actions">
       <slot name="actions"></slot>
     </div>
 
-    <p class="formats">
-      PDF uniquement · jusqu'à <span class="max-files"></span> fichiers · max 100 Mo
-    </p>
+    <p class="formats" data-formats></p>
   </div>
 </div>
 

@@ -1,19 +1,19 @@
 <section class="pi-upload">
   <h1 class="pi-upload__title" aria-labelledby="upload-heading-label">
-    <span id="upload-heading-label" class="sr-only">Vos PDFs, la confidentialité en plus</span>
-    <span aria-hidden="true"><span class="pi-upload__title-lead">Vos PDFs,</span><br /></span>
+    <span id="upload-heading-label" class="sr-only" data-i18n="upload.srTitle"></span>
+    <span aria-hidden="true"><span class="pi-upload__title-lead" data-i18n="upload.titleLead"></span><br /></span>
     <span class="pi-upload__title-row">
       <span class="pi-upload__title-core">
-        <span aria-hidden="true" class="pi-upload__title-soft">la</span>
-        <em aria-hidden="true" class="pi-upload__title-privacy">confidentialité</em>
+        <span aria-hidden="true" class="pi-upload__title-soft" data-i18n="upload.titleSoftLa"></span>
+        <em aria-hidden="true" class="pi-upload__title-privacy" data-i18n="upload.titlePrivacy"></em>
       </span>
       <span class="pi-upload__title-tail">
-        <span aria-hidden="true" class="pi-upload__title-soft">en</span>
+        <span aria-hidden="true" class="pi-upload__title-soft" data-i18n="upload.titleSoftEn"></span>
         <button
           type="button"
           class="pi-upload__badge pi-upload__badge--circle"
           data-action="browse"
-          aria-label="Choisir un fichier"
+          data-i18n-attr="aria-label:upload.chooseFileAria"
           tabindex="-1"
         >
           <pi-icon name="plus" size="60" stroke="2.4"></pi-icon>
@@ -22,30 +22,21 @@
     </span>
   </h1>
 
-  <p class="pi-upload__sub">
-    Fusionnez, réordonnez, pivotez, bref tout ce dont vous rêviez.
-    Sans inscription et en local
-  </p>
+  <p class="pi-upload__sub" data-i18n="upload.sub"></p>
 
   <pi-drop-zone accept=".pdf">
-    <pi-button slot="actions" variant="primary" data-action="browse">
-      Choisir un fichier
-    </pi-button>
-    <pi-button slot="actions" variant="ghost" icon="paste" data-action="paste">
-      Coller
-    </pi-button>
+    <pi-button slot="actions" variant="primary" data-action="browse" data-i18n="upload.chooseFile"></pi-button>
+    <pi-button slot="actions" variant="ghost" icon="paste" data-action="paste" data-i18n="upload.paste"></pi-button>
   </pi-drop-zone>
 
   <div class="pi-upload__files" data-files-region hidden>
     <div class="pi-upload__files-header">
       <span class="pi-upload__files-count" data-count></span>
-      <button type="button" class="pi-upload__files-clear" data-clear>Tout retirer</button>
+      <button type="button" class="pi-upload__files-clear" data-clear data-i18n="upload.clearAll"></button>
     </div>
     <div class="pi-upload__chips" data-chips></div>
     <div class="pi-upload__cta" data-continue-cta>
-      <pi-button variant="accent" icon="arrow" data-action="continue">
-        Commencer la modification
-      </pi-button>
+      <pi-button variant="accent" icon="arrow" data-action="continue" data-i18n="upload.cta"></pi-button>
     </div>
   </div>
 </section>

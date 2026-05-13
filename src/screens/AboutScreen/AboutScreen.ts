@@ -2,6 +2,7 @@ import '@components/base/Button/PiButton';
 import template from './aboutScreen.html?raw';
 import './aboutScreen.css';
 import aboutCompareManifest from './aboutCompare.json';
+import { applyTranslations, subscribe, t } from '@i18n';
 
 /** Valeurs affichées dans une cellule du comparatif. */
 type CompareCell = 'yes' | 'no' | 'meh' | 'yes-no' | 'no-yes';
@@ -14,32 +15,23 @@ type CompareRowKey =
   | 'limits'
   | 'tracking'
   | 'offline'
-  | 'openSource'
+  | 'openSource';
 
-/** Cellule service concurrent dans le comparatif. */
-interface ThemCell {
-  value: CompareCell;
-  label?: string;
-  title?: string;
-}
+/** Lignes du comparatif où Pidief a un titre explicatif au survol. */
+const PIDEF_TITLE_ROWS: ReadonlySet<CompareRowKey> = new Set(['limits', 'tracking']);
 
-/** Données d’une ligne complète du comparatif */
+/** Données d’une ligne complète du comparatif. */
 interface CompareRowData {
   pidief: CompareCell;
-  them: Record<CompetitorId, ThemCell>;
+  them: Record<CompetitorId, CompareCell>;
 }
 
-/** Forme attendue du fichier de comparaison */
+/** Forme attendue du fichier de comparaison (structure pure). */
 interface AboutCompareManifest {
-  displayNames: Record<CompetitorId, string>;
-  pidiefCellTitles: Partial<Record<CompareRowKey, string>>;
   rows: Record<CompareRowKey, CompareRowData>;
 }
 
 const aboutCompare = aboutCompareManifest as AboutCompareManifest;
-
-const DISPLAY_NAME = aboutCompare.displayNames;
-const PIDEF_CELL_TITLE = aboutCompare.pidiefCellTitles;
 const COMPARE_DATA = aboutCompare.rows;
 
 const ICON_CHECK =
@@ -58,19 +50,19 @@ interface CellVisual {
 }
 
 /**
- * Associe chaque valeur de cellule à son libellé, son icône et sa classe CSS.
+ * Associe chaque valeur de cellule à son libellé (traduit), son icône et sa classe CSS.
  */
 function cellVisual(value: CompareCell): CellVisual {
   switch (value) {
     case 'yes':
-      return { text: 'Oui', mod: 'yes', icon: ICON_CHECK };
+      return { text: t('about.cellYes'), mod: 'yes', icon: ICON_CHECK };
     case 'no':
-      return { text: 'Non', mod: 'no', icon: ICON_CROSS };
+      return { text: t('about.cellNo'), mod: 'no', icon: ICON_CROSS };
     case 'meh':
-      return { text: 'Partiel', mod: 'meh', icon: ICON_MEH };
+      return { text: t('about.cellMeh'), mod: 'meh', icon: ICON_MEH };
     case 'yes-no':
     case 'no-yes':
-      return { text: '14 fichiers max, 100 Mo max', mod: 'meh', icon: ICON_MEH };
+      return { text: t('about.cellLimits'), mod: 'meh', icon: ICON_MEH };
     default: {
       const _exhaustive: never = value;
       return _exhaustive;
@@ -126,15 +118,18 @@ export class AboutScreen extends HTMLElement {
   private howAbort: AbortController | null = null;
   private navAbort: AbortController | null = null;
   private howStepTimer: number | null = null;
+  private unsubscribeLang: (() => void) | null = null;
   private activeCompetitor: CompetitorId = 'iLovePDF';
   private activeHowStep = 0;
 
   /** Monte le template puis initialise les interactions locales à l’écran. */
   connectedCallback(): void {
     this.innerHTML = template;
+    applyTranslations(this);
     this.initNavActions();
     this.initCompareTable();
     this.initHowFlow();
+    this.unsubscribeLang = subscribe(() => this.onLangChanged());
   }
 
   /** Nettoie les listeners et timers quand l’écran quitte le DOM. */
@@ -146,6 +141,8 @@ export class AboutScreen extends HTMLElement {
     this.navAbort?.abort();
     this.navAbort = null;
     this.clearHowStepTimer();
+    this.unsubscribeLang?.();
+    this.unsubscribeLang = null;
   }
 
   /** Retour accueil et CTA : émet `request-navigate` comme `<pi-nav>`. */
@@ -186,19 +183,7 @@ export class AboutScreen extends HTMLElement {
     this.compareAbort = new AbortController();
     const { signal } = this.compareAbort;
 
-    const rows = Array.from(tbody.querySelectorAll('[data-compare-row]')) as HTMLTableRowElement[];
-    for (const row of rows) {
-      const key = row.dataset.compareRow as CompareRowKey | undefined;
-      if (!key || !COMPARE_DATA[key]) continue;
-
-      const { pidief } = COMPARE_DATA[key];
-      const pidiefTd = row.querySelector('[data-compare-cell="pidief"]') as HTMLTableCellElement | null;
-      if (pidiefTd) {
-        pidiefTd.innerHTML = renderCompareCell(pidief, { title: PIDEF_CELL_TITLE[key] });
-        pidiefTd.setAttribute('data-compare-value', pidief);
-      }
-    }
-
+    this.renderPidiefColumn(tbody);
     this.applyCompetitor(this.activeCompetitor, nameEl, liveEl, tbody, { animate: false });
 
     toggle.addEventListener(
@@ -220,6 +205,25 @@ export class AboutScreen extends HTMLElement {
     );
   }
 
+  /** Rend la colonne Pidief du comparatif (langue-dépendante). */
+  private renderPidiefColumn(tbody: HTMLElement): void {
+    const rows = Array.from(tbody.querySelectorAll('[data-compare-row]')) as HTMLTableRowElement[];
+    for (const row of rows) {
+      const key = row.dataset.compareRow as CompareRowKey | undefined;
+      if (!key || !COMPARE_DATA[key]) continue;
+
+      const { pidief } = COMPARE_DATA[key];
+      const pidiefTd = row.querySelector('[data-compare-cell="pidief"]') as HTMLTableCellElement | null;
+      if (pidiefTd) {
+        const title = PIDEF_TITLE_ROWS.has(key)
+          ? t(`about.compareRow.${key}.pidiefTitle`)
+          : undefined;
+        pidiefTd.innerHTML = renderCompareCell(pidief, { title });
+        pidiefTd.setAttribute('data-compare-value', pidief);
+      }
+    }
+  }
+
   /** Applique les données du concurrent sélectionné au tableau comparatif. */
   private applyCompetitor(
     id: CompetitorId,
@@ -228,9 +232,10 @@ export class AboutScreen extends HTMLElement {
     tbody: HTMLElement,
     options: { animate: boolean } = { animate: true },
   ): void {
-    const competitorName = DISPLAY_NAME[id];
+    const competitorName = t(`about.competitor.${id}`);
     nameEl.textContent = competitorName;
-    liveEl.textContent = `Tableau mis à jour : comparaison avec ${competitorName}.`;
+    nameEl.setAttribute('data-i18n', `about.competitor.${id}`);
+    liveEl.textContent = t('about.compareLiveUpdate', { name: competitorName });
 
     const reduceMotion = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches ?? false;
     if (options.animate && !reduceMotion) {
@@ -250,11 +255,12 @@ export class AboutScreen extends HTMLElement {
       const themTd = row.querySelector('[data-compare-cell="them"]') as HTMLTableCellElement | null;
       if (!themTd) continue;
 
-      const cell = COMPARE_DATA[key].them[id];
-      if (!cell) continue;
+      const cellValue = COMPARE_DATA[key].them[id];
+      const label = t(`about.them.${key}.${id}`);
       themTd.dataset.mobileLabel = competitorName;
-      themTd.innerHTML = renderCompareCell(cell.value, { title: cell.title, label: cell.label });
-      themTd.setAttribute('data-compare-value', cell.value);
+      themTd.setAttribute('data-i18n-attr', `data-mobile-label:about.competitor.${id}`);
+      themTd.innerHTML = renderCompareCell(cellValue, { label });
+      themTd.setAttribute('data-compare-value', cellValue);
     }
   }
 
@@ -341,7 +347,7 @@ export class AboutScreen extends HTMLElement {
     source.src = step.videoSrc;
     if (step.videoType) source.type = step.videoType;
 
-    video.append(source, document.createTextNode("Votre navigateur ne prend pas en charge la lecture vidéo."));
+    video.append(source, document.createTextNode(t('about.howVideoFallback')));
     videoShell.dataset.hasVideo = 'true';
     video.load();
     void video.play().catch(() => undefined);
@@ -376,6 +382,17 @@ export class AboutScreen extends HTMLElement {
     progressBar.style.animation = 'none';
     void progressBar.offsetWidth;
     progressBar.style.animation = '';
+  }
+
+  /** Recalcule les zones langue-dépendantes (cellules comparatives, label live). */
+  private onLangChanged(): void {
+    applyTranslations(this);
+    const tbody = this.querySelector<HTMLElement>('[data-compare-tbody]');
+    const nameEl = this.querySelector<HTMLElement>('[data-competitor-name]');
+    const liveEl = this.querySelector<HTMLElement>('#about-compare-live');
+    if (!tbody || !nameEl || !liveEl) return;
+    this.renderPidiefColumn(tbody);
+    this.applyCompetitor(this.activeCompetitor, nameEl, liveEl, tbody, { animate: false });
   }
 }
 
