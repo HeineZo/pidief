@@ -1,0 +1,60 @@
+{
+  "displayNames": {
+    "iLovePDF": "iLovePDF",
+    "SmallPDF": "Smallpdf"
+  },
+  "pidiefCellTitles": {
+    "limits": "Pas de quota imposé par nos serveurs ; la taille utile dépend surtout de la RAM et des limites du navigateur.",
+    "tracking": "Pas de bannières publicitaires dans l'app ; chargement du site uniquement."
+  },
+  "rows": {
+    "local": {
+      "pidief": "yes",
+      "them": {
+        "iLovePDF": { "value": "no", "label": "Non" },
+        "SmallPDF": { "value": "no", "label": "Non" }
+      }
+    },
+    "account": {
+      "pidief": "yes",
+      "them": {
+        "iLovePDF": { "value": "yes", "label": "Souvent sans compte" },
+        "SmallPDF": { "value": "meh", "label": "Compte / offre payante" }
+      }
+    },
+    "limits": {
+      "pidief": "yes-no",
+      "them": {
+        "iLovePDF": { "value": "yes", "label": "25 fichier max" },
+        "SmallPDF": { "value": "no", "label": "Très strict (filigrane, essai Pro, etc.)" }
+      }
+    },
+    "tracking": {
+      "pidief": "yes",
+      "them": {
+        "iLovePDF": {
+          "value": "no",
+          "label": "Pub et mesure d'audience fréquentes"
+        },
+        "SmallPDF": {
+          "value": "no",
+          "label": "Mesure d'audience fréquentes"
+        }
+      }
+    },
+    "offline": {
+      "pidief": "yes",
+      "them": {
+        "iLovePDF": { "value": "no", "label": "Non" },
+        "SmallPDF": { "value": "no", "label": "Non" }
+      }
+    },
+    "openSource": {
+      "pidief": "yes",
+      "them": {
+        "iLovePDF": { "value": "no", "label": "Non" },
+        "SmallPDF": { "value": "no", "label": "Non" }
+      }
+    }
+  }
+}

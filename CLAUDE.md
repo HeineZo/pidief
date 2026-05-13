@@ -86,7 +86,7 @@ Les tokens CSS sont dans:
 Ils définissent notamment:
 
 - `--color-bg`, `--color-accent`, `--color-text`, `--color-border`, etc.
-- `--font-serif` (Instrument Serif), `--font-sans` (Geist), `--font-mono` (Geist Mono)
+- `--font-sans` (Geist), `--font-mono` (Geist Mono)
 - espacements `--space-*`, radius `--radius-*`, shadows, transitions.
 
 ### Règle d’or

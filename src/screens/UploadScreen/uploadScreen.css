@@ -51,7 +51,7 @@
 .pi-upload__title em {
   color: var(--color-accent);
   font-style: italic;
-  font-family: var(--font-serif);
+  font-family: var(--font-sans);
   font-weight: 400;
 }
 

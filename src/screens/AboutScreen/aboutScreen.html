@@ -1,1 +1,318 @@
-<section class="pi-about">À propos</section>
+<main class="about">
+  <div class="about__inner">
+    <div>
+      <pi-button variant="ghost" icon="arrow-left" data-action="back">Retour</pi-button>
+
+      <section class="about-hero" aria-labelledby="about-hero-title">
+        <h1 id="about-hero-title" class="about-hero__title">
+          Vos PDFs<br />
+          restent <em class="about__accent">chez vous</em>
+        </h1>
+        <p class="about-hero__sub">
+          Pidief manipule vos documents <em class="about__accent">directement dans le navigateur</em>. <br />Pas
+          d'inscription, pas de manipulation serveur, personne n'a accès à vos données
+        </p>
+        <div class="about-hero__meta">
+          <span>100% local</span>
+          <span>WebAssembly</span>
+          <span>Open source</span>
+        </div>
+      </section>
+    </div>
+
+    <section class="about-privacy" aria-labelledby="about-privacy-title">
+      <div class="privacy-stage" data-privacy-stage>
+        <div class="privacy-stage__layout">
+          <div class="privacy-stage__browser">
+            <div class="privacy-stage__chrome">
+              <i></i><i></i><i></i>
+              <span>pidief.app</span>
+            </div>
+            <div class="privacy-stage__work">
+              <div class="privacy-stage__file">
+                <pi-icon name="file" size="14" stroke="1.8"></pi-icon>
+                <span>rapport_final.pdf</span>
+              </div>
+              <div class="privacy-stage__file">
+                <pi-icon name="file" size="14" stroke="1.8"></pi-icon>
+                <span>scan_001.pdf</span>
+              </div>
+              <div class="privacy-stage__file">
+                <pi-icon name="file" size="14" stroke="1.8"></pi-icon>
+                <span>annexes.pdf</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="privacy-stage__bridge" aria-hidden="true">
+            <div class="privacy-stage__bridge-inner">
+              <span class="privacy-stage__bridge-line"></span>
+              <span class="privacy-stage__bridge-cross"></span>
+            </div>
+          </div>
+
+          <div class="privacy-stage__cloud">
+            <div class="privacy-stage__cloud-icon">
+              <svg class="privacy-stage__cloud-svg" width="56" height="56" viewBox="0 0 24 24" aria-hidden="true">
+                <path fill="currentColor"
+                  d="M19.35 10.04C18.67 6.59 15.64 4 12 4 9.11 4 6.6 5.64 5.35 8.04 2.34 8.36 0 10.91 0 14c0 3.31 2.69 6 6 6h13c2.76 0 5-2.24 5-5 0-2.64-2.05-4.78-4.65-4.96z" />
+              </svg>
+            </div>
+            <span class="privacy-stage__cloud-label" data-privacy-cloud-label>serveur</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="privacy-text">
+        <h2 id="about-privacy-title" class="about__h2">Le fichier ne quitte <em class="about__accent">jamais</em> votre
+          onglet</h2>
+        <p class="about__lede">
+          Parce que l'on est certain que vos données devraient vous appartenir, tout le traitement se fait dans votre
+          navigateur, grâce à un
+          <strong>WebAssembly</strong>. <br />Une fois chargé, même après une invasion zombie, Pidief marchera toujours
+          !
+        </p>
+      </div>
+    </section>
+
+    <section class="about-compare" aria-labelledby="about-compare-title">
+      <div class="about-compare__head">
+        <div>
+          <h2 id="about-compare-title" class="about__h2">Côte à côte avec <em class="about__accent">les autres</em></h2>
+        </div>
+        <div class="about-compare__toggle" role="group" aria-label="Choisir un service à comparer" data-compare-toggle>
+          <button type="button" data-competitor="iLovePDF" aria-pressed="true" aria-controls="about-compare-table">
+            iLovePDF
+          </button>
+          <button type="button" data-competitor="SmallPDF" aria-pressed="false" aria-controls="about-compare-table">
+            Smallpdf
+          </button>
+        </div>
+      </div>
+
+      <p id="about-compare-live" class="about-compare__live sr-only" aria-live="polite"></p>
+
+      <table id="about-compare-table" class="about-table about-table--compare">
+        <thead>
+          <tr>
+            <th scope="col">Critère</th>
+            <th scope="col">Pidief</th>
+            <th scope="col" data-competitor-name>iLovePDF</th>
+          </tr>
+        </thead>
+        <tbody data-compare-tbody>
+          <tr data-compare-row="local">
+            <th scope="row">
+              <span>Traitement sans envoi sur un serveur</span>
+              <small>Le PDF ne quitte pas votre machine pour être modifié</small>
+            </th>
+            <td class="pidief" data-compare-cell="pidief"></td>
+            <td data-compare-cell="them"></td>
+          </tr>
+          <tr data-compare-row="account">
+            <th scope="row">
+              <span>Pas de compte nécessaire</span>
+              <small>Parcours complet sans inscription obligatoire</small>
+            </th>
+            <td class="pidief" data-compare-cell="pidief"></td>
+            <td data-compare-cell="them"></td>
+          </tr>
+          <tr data-compare-row="limits">
+            <th scope="row">
+              <span>Plafonds</span>
+              <small>Taille de fichier, nombre de tâches, filigranes, etc.</small>
+            </th>
+            <td class="pidief" data-compare-cell="pidief"></td>
+            <td data-compare-cell="them"></td>
+          </tr>
+          <tr data-compare-row="tracking">
+            <th scope="row">
+              <span>Pas de publicité ou suivi marketing tiers</span>
+              <small>Bannières, analytics</small>
+            </th>
+            <td class="pidief" data-compare-cell="pidief"></td>
+            <td data-compare-cell="them"></td>
+          </tr>
+          <tr data-compare-row="offline">
+            <th scope="row">
+              <span>Utilisable sans connexion internet</span>
+              <small>Après le premier chargement de l’app dans l’onglet</small>
+            </th>
+            <td class="pidief" data-compare-cell="pidief"></td>
+            <td data-compare-cell="them"></td>
+          </tr>
+          <tr data-compare-row="openSource">
+            <th scope="row">
+              <span>Code source ouvert</span>
+              <small>Auditable, modifiable, auto-hébergeable</small>
+            </th>
+            <td class="pidief" data-compare-cell="pidief"></td>
+            <td data-compare-cell="them"></td>
+          </tr>
+        </tbody>
+      </table>
+
+      <p class="about-compare__footnote">
+        Les offres et politiques des services tiers évoluent : vérifie les conditions et la confidentialité sur leurs
+        sites
+        officiels pour le détail à jour.
+      </p>
+    </section>
+
+    <section class="about-how" aria-labelledby="about-how-title" data-how-flow>
+      <div class="how-video-panel">
+        <div id="about-how-video" class="how-video" data-how-video data-has-video="false">
+          <video class="how-video__media" muted playsinline preload="metadata" data-how-video-media ariad-hidden="true">
+            Votre navigateur ne prend pas en charge la lecture vidéo.
+          </video>
+        </div>
+      </div>
+
+      <div class="about-how__content">
+        <h2 id="about-how-title" class="about__h2">Quatre étapes, <em class="about__accent">zéro serveur</em></h2>
+        <ol class="how-list" data-how-steps>
+          <li>
+            <button type="button" class="how-step" data-how-step="0" data-video-src="" data-video-type=""
+              data-active="true" aria-current="step" aria-controls="about-how-video">
+              <span class="how-step__progress" aria-hidden="true">
+                <span class="how-step__progress-bar"></span>
+              </span>
+              <span class="how-step__copy">
+                <span class="how-list__num">1</span>
+                <span>
+                  <span class="how-list__title">Vous déposez un PDF</span>
+                  <span class="how-list__body">
+                    Le fichier est lu par le navigateur et gardé en mémoire locale
+                  </span>
+                </span>
+              </span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="how-step" data-how-step="1" data-video-src="" data-video-type=""
+              data-active="false" aria-controls="about-how-video">
+              <span class="how-step__progress" aria-hidden="true">
+                <span class="how-step__progress-bar"></span>
+              </span>
+              <span class="how-step__copy">
+                <span class="how-list__num">2</span>
+                <span>
+                  <span class="how-list__title">MuPdf fait le travail</span>
+                  <span class="how-list__body">
+                    La librairie compile le PDF en WebAssembly et le manipule localement
+                  </span>
+                </span>
+              </span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="how-step" data-how-step="2" data-video-src="" data-video-type=""
+              data-active="false" aria-controls="about-how-video">
+              <span class="how-step__progress" aria-hidden="true">
+                <span class="how-step__progress-bar"></span>
+              </span>
+              <span class="how-step__copy">
+                <span class="how-list__num">3</span>
+                <span>
+                  <span class="how-list__title">Fusionnez, réordonnez, retournez, supprimez</span>
+                  <span class="how-list__body">
+                    Utilisez l'application à votre guise à la vitesse d'une application native
+                  </span>
+                </span>
+              </span>
+            </button>
+          </li>
+          <li>
+            <button type="button" class="how-step" data-how-step="3" data-video-src="" data-video-type=""
+              data-active="false" aria-controls="about-how-video">
+              <span class="how-step__progress" aria-hidden="true">
+                <span class="how-step__progress-bar"></span>
+              </span>
+              <span class="how-step__copy">
+                <span class="how-list__num">4</span>
+                <span>
+                  <span class="how-list__title">Téléchargez le résultat</span>
+                  <span class="how-list__body">
+                    Le PDF est compressé et téléchargé.<br />Vous repartez avec un seul fichier propre
+                  </span>
+                </span>
+              </span>
+            </button>
+          </li>
+        </ol>
+      </div>
+    </section>
+
+    <section class="about-features" aria-labelledby="about-features-title">
+      <h2 id="about-features-title" class="about__h2">Tout ce dont vous <em class="about__accent">rêviez</em></h2>
+      <p class="about__lede" style="margin-bottom: var(--space-8)">
+        Pas plus, pas moins.<br /> Les outils PDF que vous utilisez tous les jours, sans compromis sur la
+        confidentialité
+      </p>
+      <div class="about-features__grid">
+        <article class="about-feature">
+          <span class="about-feature__icon"><pi-icon name="upload" size="18" stroke="1.8"></pi-icon></span>
+          <div>
+            <h3 class="about-feature__title">Fusionner</h3>
+            <p class="about-feature__body">
+              Regroupez plusieurs fichiers en un seul en 2 clics
+            </p>
+          </div>
+        </article>
+        <article class="about-feature">
+          <span class="about-feature__icon"><pi-icon name="grid-large" size="18" stroke="1.8"></pi-icon></span>
+          <div>
+            <h3 class="about-feature__title">Réordonner</h3>
+            <p class="about-feature__body">
+              Glissez et déposez les pages pour les réordonner
+            </p>
+          </div>
+        </article>
+        <article class="about-feature">
+          <span class="about-feature__icon"><pi-icon name="rotate" size="18" stroke="1.8"></pi-icon></span>
+          <div>
+            <h3 class="about-feature__title">Pivoter</h3>
+            <p class="about-feature__body">
+              Mauvais sens ? Pivotez les pages par 90°
+            </p>
+          </div>
+        </article>
+        <article class="about-feature">
+          <span class="about-feature__icon"><pi-icon name="trash" size="18" stroke="1.8"></pi-icon></span>
+          <div>
+            <h3 class="about-feature__title">Découper</h3>
+            <p class="about-feature__body">
+              Supprimez les pages inutiles de vos PDFs
+            </p>
+          </div>
+        </article>
+        <article class="about-feature">
+          <span class="about-feature__icon"><pi-icon name="paste" size="18" stroke="1.8"></pi-icon></span>
+          <div>
+            <h3 class="about-feature__title">Coller</h3>
+            <p class="about-feature__body">
+              Copiez un PDF depuis l'explorateur de fichiers, puis collez dans Pidief
+            </p>
+          </div>
+        </article>
+        <article class="about-feature">
+          <span class="about-feature__icon"><pi-icon name="file" size="18" stroke="1.8"></pi-icon></span>
+          <div>
+            <h3 class="about-feature__title">Visualisation</h3>
+            <p class="about-feature__body">
+              Visualisez les pages de chaque fichier en un coup d'œil
+            </p>
+          </div>
+        </article>
+      </div>
+    </section>
+
+    <section class="about-cta" aria-labelledby="about-cta-title">
+      <h2 id="about-cta-title" class="about-cta__title">Prêt à <em class="about__accent">essayer</em> ?</h2>
+      <p class="about-cta__sub">
+        Pas de compte à créer. Pas de carte bleue à sortir. <br />Juste vos PDFs et vos besoins
+      </p>
+      <pi-button variant="primary" icon="arrow" data-action="open-app">Ouvrir Pidief</pi-button>
+    </section>
+  </div>
+</main>
