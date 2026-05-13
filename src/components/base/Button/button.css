@@ -27,6 +27,17 @@ pi-button {
   cursor: not-allowed;
 }
 
+.pi-button:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 3px;
+}
+
+.pi-button[data-variant='primary']:focus-visible,
+.pi-button[data-variant='accent']:focus-visible {
+  outline-offset: 2px;
+  box-shadow: 0 0 0 2px var(--color-bg);
+}
+
 .pi-button[data-variant='primary'] {
   background: var(--btn-primary-bg);
   color: var(--btn-primary-color);
@@ -40,7 +51,7 @@ pi-button {
   color: var(--btn-accent-color);
 }
 .pi-button[data-variant='accent']:is(:hover, .is-kbd-hover):not(:disabled) {
-  background: var(--color-accent-hover);
+  background: #8A5A14;
 }
 
 .pi-button[data-variant='ghost'] {

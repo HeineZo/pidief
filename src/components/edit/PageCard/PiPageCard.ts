@@ -89,6 +89,7 @@ export class PiPageCard extends HTMLElement {
       this.innerHTML = template;
     }
     if (!this.hasAttribute('tabindex')) this.setAttribute('tabindex', '0');
+    if (!this.hasAttribute('role')) this.setAttribute('role', 'listitem');
     if (!this.hasAttribute('aria-roledescription')) {
       this.setAttribute('aria-roledescription', 'Page déplaçable');
     }

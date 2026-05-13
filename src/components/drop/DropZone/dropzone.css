@@ -44,6 +44,15 @@
   transition: border-color 0.25s ease, background 0.25s ease;
 }
 
+.zone:focus {
+  outline: none;
+}
+
+.zone:focus-visible {
+  outline: 2px solid var(--color-border-focus, #c17f24);
+  outline-offset: 4px;
+}
+
 .wrap[data-dragging='true'] .zone {
   border: 2px dashed var(--drop-border-active, #c17f24);
   background: var(--drop-bg-active, #fef3d6);
