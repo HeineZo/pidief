@@ -4,13 +4,15 @@
     <div class="pi-edit__toolbar">
       <pi-button variant="ghost" icon="arrow-left" data-action="back">Retour</pi-button>
       <span class="pi-edit__toolbar-spacer"></span>
-      <pi-button variant="ghost" icon="plus" data-action="add-pdf">Ajouter un PDF</pi-button>
+      <span class="pi-edit__pdf-limit" id="edit-pdf-limit-hint" data-pdf-limit-hint></span>
+      <pi-button variant="ghost" icon="plus" data-action="add-pdf" aria-describedby="edit-pdf-limit-hint">
+        Ajouter un PDF
+      </pi-button>
       <pi-button variant="primary" icon="download" data-action="continue">Exporter</pi-button>
     </div>
     <div class="pi-edit__legend-row">
       <div class="pi-edit__legend" data-legend></div>
       <div class="pi-edit__grid-controls" role="group" aria-labelledby="grid-columns-label">
-        <label id="grid-columns-label" class="pi-edit__grid-label" for="grid-columns-range">Colonnes</label>
         <div class="pi-edit__grid-slider-wrap">
           <pi-icon name="grid-small" size="18" stroke="1.5" aria-hidden="true"></pi-icon>
           <input

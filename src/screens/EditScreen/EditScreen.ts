@@ -3,18 +3,20 @@ import '@components/base/Icon/PiIcon';
 import '@components/edit/PageCard/PiPageCard';
 import { PdfEngine } from '@core/pdf/PdfEngine';
 import type { PdfDocument } from '@core/pdf/PdfDocument';
-import { tintForSourceIndex, type PageTint } from '@components/edit/PageCard/palette';
+import { tintForFileIndex, type PageTint } from '@components/edit/PageCard/palette';
 import { PiPageCard, type PageCardAction } from '@components/edit/PageCard/PiPageCard';
 import template from './editScreen.html?raw';
 import './editScreen.css';
 import { scrollToBottom } from '@util/scrollToBottom';
+import { sendWarning } from '@util/Toast';
+import { MAX_UPLOAD_PDFS } from '@util/uploadPdfLimits';
 
-export type EditScreenSource = {
+export type EditScreenFile = {
   doc: PdfDocument;
   fileName: string;
 };
 
-interface SourceMeta {
+interface FileMeta {
   fileName: string;
   tint: PageTint;
 }
@@ -31,14 +33,16 @@ const MAX_GRID_COLUMNS = 10;
 const DEFAULT_GRID_COLUMNS = 6;
 const DRAG_SLOT_SWITCH_HYSTERESIS_PX = 12;
 
+const activeFileCount = (pageFileIndex: number[]): number => new Set(pageFileIndex).size;
+
 export class EditScreen extends HTMLElement {
-  private _docs: EditScreenSource[] | null = null;
+  private _docs: EditScreenFile[] | null = null;
   private bound = false;
   private gridColumns = DEFAULT_GRID_COLUMNS;
 
   private workingDoc: PdfDocument | null = null;
-  private sources: SourceMeta[] = [];
-  private attributions: number[] = [];
+  private fileMetas: FileMeta[] = [];
+  private pageFileIndex: number[] = [];
   private originalPageNumbers: number[] = [];
   private pageIds: string[] = [];
 
@@ -62,12 +66,12 @@ export class EditScreen extends HTMLElement {
     moved: boolean;
   } | null = null;
 
-  set docs(value: EditScreenSource[]) {
+  set docs(value: EditScreenFile[]) {
     this._docs = value;
     if (this.isConnected) void this.bootstrap();
   }
 
-  get docs(): EditScreenSource[] | null {
+  get docs(): EditScreenFile[] | null {
     return this._docs;
   }
 
@@ -91,7 +95,7 @@ export class EditScreen extends HTMLElement {
     if (doc) void doc.close();
   }
 
-  // --- Bootstrap : consolide les sources en un workingDoc unique ---
+  // --- Bootstrap : consolide les fichiers en un workingDoc unique ---
 
   private async bootstrap(): Promise<void> {
     const slots = this._docs;
@@ -101,8 +105,8 @@ export class EditScreen extends HTMLElement {
     if (!first) return;
 
     this.workingDoc = first.doc;
-    this.sources = [{ fileName: first.fileName, tint: tintForSourceIndex(0) }];
-    this.attributions = Array.from({ length: first.doc.pageCount }, () => 0);
+    this.fileMetas = [{ fileName: first.fileName, tint: tintForFileIndex(0) }];
+    this.pageFileIndex = Array.from({ length: first.doc.pageCount }, () => 0);
     this.originalPageNumbers = Array.from({ length: first.doc.pageCount }, (_, i) => i + 1);
 
     for (let i = 0; i < rest.length; i++) {
@@ -111,13 +115,13 @@ export class EditScreen extends HTMLElement {
       try {
         await this.workingDoc.merge(slot.doc);
         const added = this.workingDoc.pageCount - before;
-        const sourceIndex = this.sources.length;
-        this.sources.push({
+        const fileIndex = this.fileMetas.length;
+        this.fileMetas.push({
           fileName: slot.fileName,
-          tint: tintForSourceIndex(sourceIndex),
+          tint: tintForFileIndex(fileIndex),
         });
         for (let k = 0; k < added; k++) {
-          this.attributions.push(sourceIndex);
+          this.pageFileIndex.push(fileIndex);
           this.originalPageNumbers.push(k + 1);
         }
       } catch (err) {
@@ -144,6 +148,7 @@ export class EditScreen extends HTMLElement {
 
     const addInput = this.querySelector<HTMLInputElement>('[data-add-input]');
     this.querySelector('[data-action="add-pdf"]')?.addEventListener('click', () => {
+      if (activeFileCount(this.pageFileIndex) >= MAX_UPLOAD_PDFS) return;
       addInput?.click();
     });
     addInput?.addEventListener('change', () => {
@@ -163,6 +168,9 @@ export class EditScreen extends HTMLElement {
       if (!target) return;
       void this.handlePageAction(target, ce.detail.action);
     });
+
+    this.addEventListener('click', this.onRemoveMergedFileClick);
+    this.addEventListener('click', this.onLegendScrollToFileClick);
 
     const grid = this.querySelector<HTMLElement>('[data-grid]');
     grid?.addEventListener('pointerdown', this.onGridPointerDown);
@@ -237,7 +245,7 @@ export class EditScreen extends HTMLElement {
     }
 
     if (action === 'delete') {
-      this.attributions.splice(idx, 1);
+      this.pageFileIndex.splice(idx, 1);
       this.originalPageNumbers.splice(idx, 1);
       this.pageIds.splice(idx, 1);
       try {
@@ -248,27 +256,121 @@ export class EditScreen extends HTMLElement {
     }
   }
 
+  private readonly onRemoveMergedFileClick = (event: MouseEvent): void => {
+    const t = event.target as HTMLElement | null;
+    const btn = t?.closest<HTMLButtonElement>('[data-action="remove-file"]');
+    if (!btn || !this.contains(btn)) return;
+    const raw = btn.dataset.fileIndex;
+    const idx = raw !== undefined ? Number.parseInt(raw, 10) : NaN;
+    if (!Number.isFinite(idx)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    void this.removeMergedFileAtIndex(idx);
+  };
+
+  private readonly onLegendScrollToFileClick = (event: MouseEvent): void => {
+    const t = event.target as HTMLElement | null;
+    const btn = t?.closest<HTMLButtonElement>('[data-action="scroll-to-file"]');
+    if (!btn || !this.contains(btn)) return;
+    const raw = btn.dataset.fileIndex;
+    const idx = raw !== undefined ? Number.parseInt(raw, 10) : NaN;
+    if (!Number.isFinite(idx)) return;
+    event.preventDefault();
+    this.scrollToFirstPageOfFile(idx);
+    queueMicrotask(() => {
+      btn.blur();
+    });
+  };
+
+  private scrollToFirstPageOfFile(fileIndex: number): void {
+    let firstPageId: string | undefined;
+    for (let i = 0; i < this.pageIds.length; i++) {
+      if (this.pageFileIndex[i] === fileIndex) {
+        firstPageId = this.pageIds[i];
+        break;
+      }
+    }
+    if (!firstPageId) return;
+    const card = this.cards.get(firstPageId);
+    if (!card) return;
+    card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+  }
+
+  private async removeMergedFileAtIndex(fileIndex: number): Promise<void> {
+    const doc = this.workingDoc;
+    if (!doc) return;
+    if (fileIndex < 0 || fileIndex >= this.fileMetas.length) return;
+
+    const pageIndices = this.pageFileIndex
+      .map((fi, p) => (fi === fileIndex ? p : -1))
+      .filter((p) => p >= 0)
+      .sort((a, b) => b - a);
+
+    for (const p of pageIndices) {
+      this.pageFileIndex.splice(p, 1);
+      this.originalPageNumbers.splice(p, 1);
+      this.pageIds.splice(p, 1);
+      try {
+        await doc.deletePage(p);
+      } catch (err) {
+        console.error('[pidief] Suppression du fichier impossible:', err);
+      }
+    }
+
+    this.fileMetas.splice(fileIndex, 1);
+    for (let i = 0; i < this.pageFileIndex.length; i++) {
+      const v = this.pageFileIndex[i]!;
+      if (v > fileIndex) this.pageFileIndex[i] = v - 1;
+    }
+
+    this.reconcile();
+  }
+
   // --- Ajouter un PDF ---
 
   private async addFiles(files: File[], shouldScroll = false): Promise<void> {
     const doc = this.workingDoc;
     if (!doc || !files.length) return;
+
+    const pdfFiles = files.filter(
+      (file) => file.type === 'application/pdf' || file.name.toLowerCase().endsWith('.pdf'),
+    );
+    if (pdfFiles.length === 0) return;
+
+    const remaining = MAX_UPLOAD_PDFS - activeFileCount(this.pageFileIndex);
+    if (remaining <= 0) {
+      sendWarning(
+        `Limite de ${MAX_UPLOAD_PDFS} fichiers PDF atteinte. Supprimez un ou des fichiers pour en ajouter d'autres.`,
+      );
+      return;
+    }
+
+    const toProcess = pdfFiles.slice(0, remaining);
+    const skipped = pdfFiles.length - toProcess.length;
+    if (skipped > 0) {
+      sendWarning(
+        skipped === 1
+          ? `Un fichier n'a pas été ajouté : limite de ${MAX_UPLOAD_PDFS} PDF.`
+          : `${skipped} fichiers n'ont pas été ajoutés : limite de ${MAX_UPLOAD_PDFS} PDF.`,
+      );
+    }
+
     const engine = PdfEngine.shared();
 
-    for (const file of files) {
+    for (const file of toProcess) {
       let added: PdfDocument | null = null;
       try {
         added = await engine.open(file);
         const before = doc.pageCount;
         await doc.merge(added);
         const count = doc.pageCount - before;
-        const sourceIndex = this.sources.length;
-        this.sources.push({
+        const fileIndex = this.fileMetas.length;
+        this.fileMetas.push({
           fileName: file.name,
-          tint: tintForSourceIndex(sourceIndex),
+          tint: tintForFileIndex(fileIndex),
         });
         for (let i = 0; i < count; i++) {
-          this.attributions.push(sourceIndex);
+          this.pageFileIndex.push(fileIndex);
           this.originalPageNumbers.push(i + 1);
           this.pageIds.push(crypto.randomUUID());
         }
@@ -334,15 +436,15 @@ export class EditScreen extends HTMLElement {
         card.dataset.pageId = id;
         this.cards.set(id, card);
       }
-      const sourceIndex = this.attributions[idx] ?? 0;
-      const meta = this.sources[sourceIndex];
+      const fileIndex = this.pageFileIndex[idx] ?? 0;
+      const meta = this.fileMetas[fileIndex];
       const original = this.originalPageNumbers[idx] ?? idx + 1;
       card.setAttribute('page-index', String(idx));
       card.setAttribute('display-order', String(idx + 1));
       card.setAttribute('original-page', String(original));
-      card.dataset.sourceIndex = String(sourceIndex);
+      card.dataset.fileIndex = String(fileIndex);
       if (meta) {
-        card.setAttribute('source-name', meta.fileName);
+        card.setAttribute('file-name', meta.fileName);
         card.tint = meta.tint;
       }
       card.doc = doc;
@@ -356,8 +458,36 @@ export class EditScreen extends HTMLElement {
     });
 
     this.renderLegend();
+    this.syncAddPdfControls();
 
     if (empty) empty.hidden = desiredIds.length > 0;
+  }
+
+  private syncAddPdfControls(): void {
+    const active = activeFileCount(this.pageFileIndex);
+    const atLimit = active >= MAX_UPLOAD_PDFS;
+
+    const hint = this.querySelector<HTMLElement>('[data-pdf-limit-hint]');
+    if (hint) {
+      hint.textContent = `${active} / ${MAX_UPLOAD_PDFS} fichiers PDF`;
+    }
+
+    const addBtn = this.querySelector<HTMLElement>('[data-action="add-pdf"]');
+    if (addBtn) {
+      addBtn.toggleAttribute('disabled', atLimit);
+      if (atLimit) {
+        addBtn.setAttribute(
+          'title',
+          `Limite de ${MAX_UPLOAD_PDFS} fichiers PDF. Supprimez un ou des fichiers pour libérer une place.`,
+        );
+      } else {
+        addBtn.removeAttribute('title');
+      }
+      addBtn.querySelector('button')?.setAttribute('aria-describedby', 'edit-pdf-limit-hint');
+    }
+
+    const addInput = this.querySelector<HTMLInputElement>('[data-add-input]');
+    if (addInput) addInput.disabled = atLimit;
   }
 
   private renderLegend(): void {
@@ -365,16 +495,18 @@ export class EditScreen extends HTMLElement {
     if (!legend) return;
 
     const counts = new Map<number, number>();
-    for (const sourceIndex of this.attributions) {
-      counts.set(sourceIndex, (counts.get(sourceIndex) ?? 0) + 1);
+    for (const fileIdx of this.pageFileIndex) {
+      counts.set(fileIdx, (counts.get(fileIdx) ?? 0) + 1);
     }
 
-    legend.innerHTML = this.sources
+    legend.innerHTML = this.fileMetas
       .map((meta, i) => {
         const count = counts.get(i) ?? 0;
         if (count === 0) return '';
         const marker = this.renderLegendMarker(meta.tint);
-        return `<span class="pi-edit__legend-item" data-source-index="${i}">${marker}<span class="pi-edit__legend-name">${escapeHtml(meta.fileName)}</span><span class="pi-edit__legend-count">${count} p.</span></span>`;
+        const ariaRemove = escapeHtml(`Retirer ${meta.fileName} du projet`);
+        const ariaScroll = escapeHtml(`Aller à la première page dans la grille : ${meta.fileName}`);
+        return `<span class="pi-edit__legend-item" data-file-index="${i}" style="--pi-legend-file-color:${escapeHtml(meta.tint.color)}"><span class="pi-edit__legend-body"><button type="button" class="pi-edit__legend-main" data-action="scroll-to-file" data-file-index="${i}" aria-label="${ariaScroll}" title="Voir la première page dans la grille">${marker}<span class="pi-edit__legend-name">${escapeHtml(meta.fileName)}</span><span class="pi-edit__legend-count">${count} p.</span></button><button type="button" class="pi-edit__legend-remove" data-action="remove-file" data-file-index="${i}" title="Retirer ce fichier du projet" aria-label="${ariaRemove}"><pi-icon name="trash" size="14"></pi-icon></button></span></span>`;
       })
       .join('');
   }
@@ -404,14 +536,14 @@ export class EditScreen extends HTMLElement {
     }
   }
 
-  // --- Hover dim : items de légende des autres sources ---
+  // --- Hover dim : items de légende des autres fichiers ---
 
   private readonly onGridPointerOver = (event: PointerEvent): void => {
     if (this.dragSession) return;
     const target = event.target as HTMLElement | null;
     const card = target?.closest<PiPageCard>('pi-page-card') ?? null;
     if (!card) return;
-    const active = card.dataset.sourceIndex;
+    const active = card.dataset.fileIndex;
     if (active === undefined) return;
     this.applyLegendFade(active);
   };
@@ -420,10 +552,10 @@ export class EditScreen extends HTMLElement {
     this.clearFaded();
   };
 
-  private applyLegendFade(activeSourceIndex: string): void {
+  private applyLegendFade(activeFileIndex: string): void {
     const items = this.querySelectorAll<HTMLElement>('.pi-edit__legend-item');
     items.forEach((item) => {
-      if (item.dataset.sourceIndex !== activeSourceIndex) {
+      if (item.dataset.fileIndex !== activeFileIndex) {
         item.dataset.faded = 'true';
       } else {
         delete item.dataset.faded;
@@ -574,8 +706,8 @@ export class EditScreen extends HTMLElement {
 
     const [pid] = this.pageIds.splice(from, 1);
     if (pid !== undefined) this.pageIds.splice(to, 0, pid);
-    const [attr] = this.attributions.splice(from, 1);
-    if (attr !== undefined) this.attributions.splice(to, 0, attr);
+    const [attr] = this.pageFileIndex.splice(from, 1);
+    if (attr !== undefined) this.pageFileIndex.splice(to, 0, attr);
     const [orig] = this.originalPageNumbers.splice(from, 1);
     if (orig !== undefined) this.originalPageNumbers.splice(to, 0, orig);
 

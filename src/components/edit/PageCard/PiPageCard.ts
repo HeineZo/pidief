@@ -13,7 +13,7 @@ const isAction = (value: string | null): value is PageCardAction =>
 
 export class PiPageCard extends HTMLElement {
   static get observedAttributes(): string[] {
-    return ['page-index', 'source-name', 'display-order', 'original-page'];
+    return ['page-index', 'file-name', 'display-order', 'original-page'];
   }
 
   private _doc: PdfDocument | null = null;
@@ -96,9 +96,9 @@ export class PiPageCard extends HTMLElement {
   }
 
   private updateFooter(): void {
-    const name = this.getAttribute('source-name') ?? '';
+    const name = this.getAttribute('file-name') ?? '';
     const label = this.querySelector<HTMLElement>('[data-label]');
-    const footer = this.querySelector<HTMLElement>('.pi-page-card__footer');
+    const titleBar = this.querySelector<HTMLElement>('.pi-page-card__title-bar');
     const patternEl = this.querySelector<HTMLElement>('[data-pattern]');
     const num = this.querySelector<HTMLElement>('[data-num]');
 
@@ -109,14 +109,14 @@ export class PiPageCard extends HTMLElement {
     if (label) {
       label.textContent = pageLabel;
     }
-    if (footer) {
+    if (titleBar) {
       const cleanName = name.replace(/\.pdf$/i, '');
       if (pageLabel && cleanName) {
-        footer.setAttribute('aria-label', `${pageLabel} de ${cleanName}`);
-        footer.setAttribute('title', `${pageLabel} — ${cleanName}`);
+        titleBar.setAttribute('aria-label', `${pageLabel} de ${cleanName}`);
+        titleBar.setAttribute('title', `${pageLabel} — ${cleanName}`);
       } else {
-        footer.removeAttribute('aria-label');
-        footer.removeAttribute('title');
+        titleBar.removeAttribute('aria-label');
+        titleBar.removeAttribute('title');
       }
     }
     if (patternEl && this._tint) {

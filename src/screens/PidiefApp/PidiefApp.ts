@@ -3,13 +3,13 @@ import '@screens/AboutScreen/AboutScreen';
 import '@screens/UploadScreen/UploadScreen';
 import '@screens/EditScreen/EditScreen';
 import { PdfEngine } from '@core/pdf/PdfEngine';
-import { EditScreen, type EditScreenSource } from '@screens/EditScreen/EditScreen';
+import { EditScreen, type EditScreenFile } from '@screens/EditScreen/EditScreen';
 import template from './pidiefApp.html?raw';
 import { sendError } from '@util/Toast';
 
 export class PidiefApp extends HTMLElement {
   private routeHost: HTMLElement | null = null;
-  private currentSlots: EditScreenSource[] | null = null;
+  private currentSlots: EditScreenFile[] | null = null;
 
   private readonly onPopState = (): void => {
     this.renderRoute();
@@ -46,7 +46,7 @@ export class PidiefApp extends HTMLElement {
   private async onFilesReady(event: CustomEvent<{ files: File[] }>): Promise<void> {
     const { files } = event.detail;
     const engine = PdfEngine.shared();
-    const slots: EditScreenSource[] = [];
+    const slots: EditScreenFile[] = [];
     try {
       for (const file of files) {
         slots.push({ doc: await engine.open(file), fileName: file.name });

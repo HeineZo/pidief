@@ -9,6 +9,7 @@
  *  - `files-dropped` (CustomEvent<{ files: File[] }>) : files d\u00e9pos\u00e9s ou s\u00e9lectionn\u00e9s
  */
 
+import { MAX_UPLOAD_PDFS } from '@util/uploadPdfLimits';
 import html from './dropzone.html?raw';
 import css from './dropzone.css?raw';
 
@@ -34,6 +35,9 @@ export class PiDropZone extends HTMLElement {
     this.input = root.querySelector<HTMLInputElement>('input[type=\"file\"]');
 
     if (!this.wrap || !this.input) return;
+
+    const maxFilesEl = root.querySelector<HTMLSpanElement>('.max-files');
+    if (maxFilesEl) maxFilesEl.textContent = String(MAX_UPLOAD_PDFS);
 
     const accept = this.getAttribute('accept');
     if (accept) this.input.accept = accept;

@@ -24,7 +24,7 @@ pi-button {
 
 .pi-button:disabled {
   opacity: 0.5;
-  cursor: default;
+  cursor: not-allowed;
 }
 
 .pi-button[data-variant='primary'] {
