@@ -28,6 +28,7 @@ export type PdfRequestPayload =
       delta: number;
     }
   | { type: 'deletePage'; docId: string; pageIndex: number }
+  | { type: 'deletePages'; docId: string; pageIndices: number[] }
   | { type: 'export'; docId: string };
 
 export type PdfRequest = PdfRequestPayload & { requestId: string };

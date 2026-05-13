@@ -489,6 +489,7 @@ pi-edit-screen {
   cursor: grab;
   transition: transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1), box-shadow 0.15s;
   display: block;
+  transform-origin: 50% 50%;
 }
 
 .pi-edit__grid[data-dragging='true'],
@@ -506,6 +507,29 @@ pi-edit-screen {
   pointer-events: none;
 }
 
+.pi-edit__grid pi-page-card[data-removing='true'] {
+  opacity: 0;
+  transform: scale(0.85);
+  pointer-events: none;
+  transition:
+    transform 0.18s cubic-bezier(0.2, 0.7, 0.3, 1),
+    opacity 0.18s ease;
+}
+
+.pi-edit__legend-item[data-removing='true'] {
+  opacity: 0;
+  transform: scale(0.96);
+  pointer-events: none;
+  transition:
+    opacity 0.18s ease,
+    transform 0.18s ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pi-edit__grid pi-page-card[data-removing='true'],
+  .pi-edit__legend-item[data-removing='true'] {
+    transition: none;
+  }
 pi-page-card[data-lifted='true'] .pi-page-card__shell {
   transform: scale(1.04);
   box-shadow: var(--shadow-lg);

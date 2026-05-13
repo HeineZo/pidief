@@ -100,6 +100,17 @@ export class PdfDocument extends EventTarget {
     this.applyMutation(res);
   }
 
+  async deletePages(indices: readonly number[]): Promise<void> {
+    if (indices.length === 0) return;
+    this.ensureOpen();
+    const res = await this.engine.post({
+      type: 'deletePages',
+      docId: this.docId,
+      pageIndices: [...indices],
+    });
+    this.applyMutation(res);
+  }
+
   async exportToBlob(): Promise<Blob> {
     this.ensureOpen();
     const res = await this.engine.post({ type: 'export', docId: this.docId });
