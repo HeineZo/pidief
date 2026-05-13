@@ -156,7 +156,7 @@ export class EditScreen extends HTMLElement {
 
     this.querySelector('[data-action="skip-to-first-legend-file"]')?.addEventListener('click', (event) => {
       event.preventDefault();
-      this.focusFirstLegendFile();
+      this.focusFirstPageFile();
     });
 
     const addInput = this.querySelector<HTMLInputElement>('[data-add-input]');
@@ -302,11 +302,11 @@ export class EditScreen extends HTMLElement {
     });
   };
 
-  private focusFirstLegendFile(): void {
-    const firstLegendButton = this.querySelector<HTMLButtonElement>('.pi-edit__legend-item[data-file-index="0"] .pi-edit__legend-main');
-    if (firstLegendButton) {
-      firstLegendButton.focus();
-      firstLegendButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+  private focusFirstPageFile(): void {
+    const firstPageCard = this.querySelector<PiPageCard>('[data-grid] pi-page-card:first-child');
+    if (firstPageCard) {
+      firstPageCard.focus();
+      firstPageCard.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
     }
   }
 
