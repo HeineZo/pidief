@@ -59,14 +59,53 @@ pi-upload-screen {
   font-weight: 400;
 }
 
+.pi-upload__title-plain {
+  color: var(--color-text);
+  font-weight: 400;
+  font-style: normal;
+}
+
+/* Évite plusieurs `column-gap` quand une locale laisse ces nœuds vides (ex. EN avant le bouton +). */
+.pi-upload__title-soft:empty,
+.pi-upload__title-privacy:empty,
+.pi-upload__title-plain:empty {
+  display: none;
+}
+
 .pi-upload__title-row {
   display: inline-flex;
   align-items: center;
   justify-content: center;
   flex-wrap: wrap;
   max-width: 100%;
-  column-gap: 0.22em;
+  column-gap: 0.20em;
   row-gap: 0.06em;
+}
+
+/**
+ * Coupe la ligne comme un <br> dans le flex : uniquement hors mobile (≥641px),
+ * où le titre reste un bandeau inline-flex. Sur mobile tout est en colonne.
+ */
+.pi-upload__title-linebreak {
+  display: none;
+}
+
+@media (min-width: 641px) {
+  html:lang(fr) .pi-upload__title-linebreak--fr-after-heavy {
+    flex-basis: 100%;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    display: block;
+  }
+
+  html:lang(en) .pi-upload__title-linebreak--en-after-badge {
+    flex-basis: 100%;
+    width: 0;
+    height: 0;
+    overflow: hidden;
+    display: block;
+  }
 }
 
 .pi-upload__title-core {
@@ -90,6 +129,7 @@ pi-upload-screen {
   flex-shrink: 0;
   width: 0.95em;
   height: 0.95em;
+  margin-inline-start: -0.04em;
   cursor: pointer;
   transition: transform var(--transition-base);
 }
@@ -234,12 +274,7 @@ pi-button[data-action='paste'] .pi-button.is-kbd-hover:not(:disabled) {
     align-items: center;
     justify-content: center;
     column-gap: 0;
-    row-gap: 0;
-  }
-
-  .pi-upload__title-core {
-    max-width: 100%;
-    gap: 0.18em;
+    row-gap: 0.06em;
   }
 
   .pi-upload__title-privacy {
@@ -247,11 +282,6 @@ pi-button[data-action='paste'] .pi-button.is-kbd-hover:not(:disabled) {
     letter-spacing: -0.055em;
     line-height: 1;
     overflow-wrap: anywhere;
-  }
-
-  .pi-upload__title-tail {
-    gap: 0.2em;
-    line-height: 1;
   }
 
   .pi-upload__badge {

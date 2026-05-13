@@ -1,24 +1,29 @@
 <section class="pi-upload">
   <h1 class="pi-upload__title" aria-labelledby="upload-heading-label">
     <span id="upload-heading-label" class="sr-only" data-i18n="upload.srTitle"></span>
-    <span aria-hidden="true"><span class="pi-upload__title-lead" data-i18n="upload.titleLead"></span><br /></span>
-    <span class="pi-upload__title-row">
-      <span class="pi-upload__title-core">
-        <span aria-hidden="true" class="pi-upload__title-soft" data-i18n="upload.titleSoftLa"></span>
-        <em aria-hidden="true" class="pi-upload__title-privacy" data-i18n="upload.titlePrivacy"></em>
-      </span>
-      <span class="pi-upload__title-tail">
-        <span aria-hidden="true" class="pi-upload__title-soft" data-i18n="upload.titleSoftEn"></span>
-        <button
-          type="button"
-          class="pi-upload__badge pi-upload__badge--circle"
-          data-action="browse"
-          data-i18n-attr="aria-label:upload.chooseFileAria"
-          tabindex="-1"
-        >
-          <pi-icon name="plus" size="60" stroke="2.4"></pi-icon>
-        </button>
-      </span>
+    <span class="pi-upload__title-row" aria-hidden="true">
+      <span class="pi-upload__title-lead" data-i18n="upload.titleHeavy"></span>
+      <span
+        class="pi-upload__title-linebreak pi-upload__title-linebreak--fr-after-heavy"
+        aria-hidden="true"
+      ></span>
+      <span class="pi-upload__title-soft" data-i18n="upload.titleSoft"></span>
+      <em class="pi-upload__title-privacy" data-i18n="upload.titleMidAccent"></em>
+      <span class="pi-upload__title-plain" data-i18n="upload.titleMidPlain"></span>
+      <button
+        type="button"
+        class="pi-upload__badge pi-upload__badge--circle"
+        data-action="browse"
+        data-i18n-attr="aria-label:upload.chooseFileAria"
+        tabindex="-1"
+      >
+        <pi-icon name="plus" size="60" stroke="2.4"></pi-icon>
+      </button>
+      <span
+        class="pi-upload__title-linebreak pi-upload__title-linebreak--en-after-badge"
+        aria-hidden="true"
+      ></span>
+      <em class="pi-upload__title-privacy" data-i18n="upload.titleSuffix"></em>
     </span>
   </h1>
 
