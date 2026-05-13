@@ -35,7 +35,7 @@
   --btn-primary-hover:  #3D2A12;
   --btn-ghost-border:   var(--color-border);
   --btn-ghost-color:    var(--color-muted);
-  --btn-accent-bg:      var(--color-accent);
+  --btn-accent-bg:      var(--color-accent-hover);
   --btn-accent-color:   #FFFFFF;
 
   --nav-bg:             transparent;

@@ -17,6 +17,7 @@ const TEMPLATE = `<style>${css}</style>${html}`;
 
 export class PiDropZone extends HTMLElement {
   private wrap: HTMLDivElement | null = null;
+  private zone: HTMLDivElement | null = null;
   private actions: HTMLDivElement | null = null;
   private input: HTMLInputElement | null = null;
 
@@ -31,6 +32,7 @@ export class PiDropZone extends HTMLElement {
     if (!root) return;
 
     this.wrap = root.querySelector<HTMLDivElement>('.wrap');
+    this.zone = root.querySelector<HTMLDivElement>('.zone');
     this.actions = root.querySelector<HTMLDivElement>('.actions');
     this.input = root.querySelector<HTMLInputElement>('input[type=\"file\"]');
 
@@ -46,6 +48,7 @@ export class PiDropZone extends HTMLElement {
     this.wrap.addEventListener('dragleave', this.onDragLeave);
     this.wrap.addEventListener('drop', this.onDrop);
     this.wrap.addEventListener('click', this.onWrapClick);
+    this.zone?.addEventListener('keydown', this.onZoneKeyDown);
     this.input.addEventListener('change', this.onInputChange);
   }
 
@@ -54,6 +57,7 @@ export class PiDropZone extends HTMLElement {
     this.wrap?.removeEventListener('dragleave', this.onDragLeave);
     this.wrap?.removeEventListener('drop', this.onDrop);
     this.wrap?.removeEventListener('click', this.onWrapClick);
+    this.zone?.removeEventListener('keydown', this.onZoneKeyDown);
     this.input?.removeEventListener('change', this.onInputChange);
   }
 
@@ -64,6 +68,13 @@ export class PiDropZone extends HTMLElement {
   openFileDialog(): void {
     this.input?.click();
   }
+
+  private onZoneKeyDown = (event: KeyboardEvent): void => {
+    if (event.target !== this.zone) return;
+    if (event.key !== 'Enter' && event.key !== ' ') return;
+    event.preventDefault();
+    this.openFileDialog();
+  };
 
   private onWrapClick = (event: MouseEvent): void => {
     if (event.defaultPrevented) return;

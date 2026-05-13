@@ -4,6 +4,11 @@ import './nav.css';
 const LANGS = ['FR', 'EN'] as const;
 type Lang = (typeof LANGS)[number];
 
+const LANG_FULL_NAME: Record<Lang, string> = {
+  FR: 'Français',
+  EN: 'English',
+};
+
 const isLang = (value: string | null): value is Lang =>
   value !== null && (LANGS as readonly string[]).includes(value);
 
@@ -13,21 +18,47 @@ const isLang = (value: string | null): value is Lang =>
  * \u00c9met `lang-changed` (CustomEvent<{ lang: Lang }>) lorsque l'utilisateur change la langue.
  */
 export class PiNav extends HTMLElement {
+  private readonly onPopState = (): void => {
+    this.updateActiveLink();
+  };
+  private readonly onLocationChange = (): void => {
+    this.updateActiveLink();
+  };
+
   static get observedAttributes(): string[] {
     return ['lang'];
   }
 
   connectedCallback(): void {
     this.render();
+    this.syncDocumentLang();
+    window.addEventListener('popstate', this.onPopState);
+    window.addEventListener('request-navigate', this.onLocationChange);
+  }
+
+  disconnectedCallback(): void {
+    window.removeEventListener('popstate', this.onPopState);
+    window.removeEventListener('request-navigate', this.onLocationChange);
   }
 
   attributeChangedCallback(): void {
-    if (this.isConnected) this.render();
+    if (this.isConnected) {
+      this.render();
+      this.syncDocumentLang();
+    }
   }
 
   private currentLang(): Lang {
     const raw = this.getAttribute('lang');
     return isLang(raw) ? raw : 'FR';
+  }
+
+  private syncDocumentLang(): void {
+    const lang = this.currentLang();
+    const code = lang === 'FR' ? 'fr' : 'en';
+    if (document.documentElement.lang !== code) {
+      document.documentElement.lang = code;
+    }
   }
 
   private navigate(path: string): void {
@@ -38,13 +69,26 @@ export class PiNav extends HTMLElement {
         composed: true,
       }),
     );
+    queueMicrotask(() => this.updateActiveLink());
+  }
+
+  private updateActiveLink(): void {
+    const path = window.location.pathname;
+    const aboutBtn = this.querySelector<HTMLButtonElement>('[data-nav="about"]');
+    if (aboutBtn) {
+      if (path === '/about') {
+        aboutBtn.setAttribute('aria-current', 'page');
+      } else {
+        aboutBtn.removeAttribute('aria-current');
+      }
+    }
   }
 
   private render(): void {
     const lang = this.currentLang();
     const langButtons = LANGS.map(
       (l) =>
-        `<button type="button" data-lang="${l}" data-active="${l === lang}">${l}</button>`,
+        `<button type="button" data-lang="${l}" data-active="${l === lang}" aria-pressed="${l === lang}" aria-label="${LANG_FULL_NAME[l]}">${l}</button>`,
     ).join('');
 
     this.innerHTML = html.replace('__LANG_BUTTONS__', langButtons);
@@ -72,6 +116,8 @@ export class PiNav extends HTMLElement {
         }
       });
     });
+
+    this.updateActiveLink();
   }
 }
 

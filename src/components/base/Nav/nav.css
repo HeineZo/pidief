@@ -85,3 +85,12 @@ button.pi-nav__link:focus-visible {
   background: var(--color-text);
   color: var(--color-card);
 }
+
+.pi-nav__lang button:focus-visible {
+  outline: 2px solid var(--color-border-focus);
+  outline-offset: 2px;
+}
+
+.pi-nav__link[aria-current='page'] {
+  color: var(--color-text);
+}
