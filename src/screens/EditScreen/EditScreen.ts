@@ -146,6 +146,11 @@ export class EditScreen extends HTMLElement {
       this.dispatchEvent(new CustomEvent<void>('request-back', { bubbles: true, composed: true }));
     });
 
+    this.querySelector('[data-action="skip-to-first-legend-file"]')?.addEventListener('click', (event) => {
+      event.preventDefault();
+      this.focusFirstLegendFile();
+    });
+
     const addInput = this.querySelector<HTMLInputElement>('[data-add-input]');
     this.querySelector('[data-action="add-pdf"]')?.addEventListener('click', () => {
       if (activeFileCount(this.pageFileIndex) >= MAX_UPLOAD_PDFS) return;
@@ -281,6 +286,14 @@ export class EditScreen extends HTMLElement {
       btn.blur();
     });
   };
+
+  private focusFirstLegendFile(): void {
+    const firstLegendButton = this.querySelector<HTMLButtonElement>('.pi-edit__legend-item[data-file-index="0"] .pi-edit__legend-main');
+    if (firstLegendButton) {
+      firstLegendButton.focus();
+      firstLegendButton.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'nearest' });
+    }
+  }
 
   private scrollToFirstPageOfFile(fileIndex: number): void {
     let firstPageId: string | undefined;
@@ -506,7 +519,8 @@ export class EditScreen extends HTMLElement {
         const marker = this.renderLegendMarker(meta.tint);
         const ariaRemove = escapeHtml(`Retirer ${meta.fileName} du projet`);
         const ariaScroll = escapeHtml(`Aller à la première page dans la grille : ${meta.fileName}`);
-        return `<span class="pi-edit__legend-item" data-file-index="${i}" style="--pi-legend-file-color:${escapeHtml(meta.tint.color)}"><span class="pi-edit__legend-body"><button type="button" class="pi-edit__legend-main" data-action="scroll-to-file" data-file-index="${i}" aria-label="${ariaScroll}" title="Voir la première page dans la grille">${marker}<span class="pi-edit__legend-name">${escapeHtml(meta.fileName)}</span><span class="pi-edit__legend-count">${count} p.</span></button><button type="button" class="pi-edit__legend-remove" data-action="remove-file" data-file-index="${i}" title="Retirer ce fichier du projet" aria-label="${ariaRemove}"><pi-icon name="trash" size="14"></pi-icon></button></span></span>`;
+        const fileNameId = i === 0 ? ' id="edit-first-legend-file-name"' : '';
+        return `<span class="pi-edit__legend-item" data-file-index="${i}" style="--pi-legend-file-color:${escapeHtml(meta.tint.color)}"><span class="pi-edit__legend-body"><button type="button" class="pi-edit__legend-main" data-action="scroll-to-file" data-file-index="${i}" aria-label="${ariaScroll}" title="Voir la première page dans la grille">${marker}<span class="pi-edit__legend-name"${fileNameId}>${escapeHtml(meta.fileName)}</span><span class="pi-edit__legend-count">${count} p.</span></button><button type="button" class="pi-edit__legend-remove" data-action="remove-file" data-file-index="${i}" title="Retirer ce fichier du projet" aria-label="${ariaRemove}"><pi-icon name="trash" size="14"></pi-icon></button></span></span>`;
       })
       .join('');
   }
