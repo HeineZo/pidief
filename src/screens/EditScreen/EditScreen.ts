@@ -192,7 +192,9 @@ export class EditScreen extends HTMLElement {
     });
 
     const addInput = this.querySelector<HTMLInputElement>('[data-add-input]');
-    this.querySelector('[data-action="add-pdf"]')?.addEventListener('click', () => {
+    this.addEventListener('click', (event) => {
+      const target = (event.target as HTMLElement | null)?.closest<HTMLButtonElement>('[data-action="add-pdf"]');
+      if (!target || !this.contains(target)) return;
       if (activeFileCount(this.pageFileIndex) >= MAX_UPLOAD_PDFS) return;
       addInput?.click();
     });
@@ -676,7 +678,11 @@ export class EditScreen extends HTMLElement {
       prev = card;
     });
 
+    const active = activeFileCount(this.pageFileIndex);
+    const atLimit = active >= MAX_UPLOAD_PDFS;
+
     this.renderLegend();
+    this.syncAddPageButton(grid, desiredIds.length > 0, atLimit);
     this.syncAddPdfControls();
 
     if (empty) empty.hidden = desiredIds.length > 0;
@@ -693,23 +699,55 @@ export class EditScreen extends HTMLElement {
         : `${active} / ${MAX_UPLOAD_PDFS} fichiers PDF`;
     }
 
-    const addBtn = this.querySelector<HTMLElement>('[data-action="add-pdf"]');
-    if (addBtn) {
-      addBtn.toggleAttribute('disabled', atLimit);
-      addBtn.removeAttribute('title');
-      const innerBtn = addBtn.querySelector('button');
-      if (innerBtn) {
-        if (atLimit) {
-          innerBtn.setAttribute('aria-disabled', 'true');
-        } else {
-          innerBtn.removeAttribute('aria-disabled');
-        }
-        innerBtn.setAttribute('aria-describedby', 'edit-pdf-limit-hint');
+    const addBtns = this.querySelectorAll<HTMLButtonElement>('[data-action="add-pdf"]');
+    addBtns.forEach((btn) => {
+      btn.disabled = atLimit;
+      if (atLimit) {
+        btn.setAttribute(
+          'title',
+          `Limite de ${MAX_UPLOAD_PDFS} fichiers PDF. Supprimez un ou des fichiers pour libérer une place.`,
+        );
+      } else {
+        btn.removeAttribute('title');
       }
-    }
+      btn.setAttribute('aria-describedby', 'edit-pdf-limit-hint');
+    });
 
     const addInput = this.querySelector<HTMLInputElement>('[data-add-input]');
     if (addInput) addInput.disabled = atLimit;
+  }
+
+  private syncAddPageButton(grid: HTMLElement, hasPages: boolean, atLimit: boolean): void {
+    const existing = grid.querySelector<HTMLButtonElement>('[data-action="add-pdf"].pi-edit__grid-add-card');
+    if (!hasPages) {
+      existing?.remove();
+      return;
+    }
+
+    const button = existing ?? document.createElement('button');
+    if (!existing) {
+      button.type = 'button';
+      button.className = 'pi-edit__grid-add-card';
+      button.dataset.action = 'add-pdf';
+      button.setAttribute('aria-label', 'Ajouter un PDF');
+      button.innerHTML = `
+        <span class="pi-edit__grid-add-card__content">
+          <pi-icon name="plus" size="20" stroke="1.8" aria-hidden="true"></pi-icon>
+          <span>Ajouter un PDF</span>
+        </span>
+      `;
+    }
+
+    button.disabled = atLimit;
+    if (atLimit) {
+      button.setAttribute('aria-disabled', 'true');
+    } else {
+      button.removeAttribute('aria-disabled');
+    }
+
+    if (!grid.contains(button)) {
+      grid.append(button);
+    }
   }
 
   private renderLegend(): void {
