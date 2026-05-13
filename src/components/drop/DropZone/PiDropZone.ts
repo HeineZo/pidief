@@ -100,6 +100,9 @@ export class PiDropZone extends HTMLElement {
 
     const clickedInteractive = path.some((node) => {
       if (!(node instanceof HTMLElement)) return false;
+      // `.zone` uses role="button" for keyboard a11y; it must not block opening
+      // the file dialog when the user clicks the main drop surface (title, icon, …).
+      if (node === this.zone) return false;
       const tag = node.tagName.toLowerCase();
       return (
         tag === 'button' ||
